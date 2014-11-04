@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ This project is using the Contao Community Alliance Build System (CCABS)
+
+ For documentation visit:
+   https://github.com/contao-community-alliance/build-system
+
+-->
+<project name="build system check autoloading" default="build">
+    <import file="vendor/contao-community-alliance/build-system/ccabs.main.xml" />
+
+    <!-- we have to override the command as otherwise ccabs won't find it. We are the root repository. -->
+    <target name="autoloading-validation">
+        <exec dir="${basedir}" executable="bin/check-autoloading.php" failonerror="true" taskname="check-autoloading">
+            <arg line="${basedir}"/>
+        </exec>
+    </target>
+</project>

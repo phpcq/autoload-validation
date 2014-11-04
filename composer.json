@@ -1,0 +1,50 @@
+{
+    "name": "contao-community-alliance/build-system-tool-autoloading-validation",
+    "description": "Check that the contents of the composer.json autoload keys are correct.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name":"Christian Schiffler",
+            "email":"c.schiffler@cyberspectrum.de",
+            "homepage":"http://www.cyberspectrum.de",
+            "role":"Developer"
+        },
+        {
+            "name":"Tristan Lins",
+            "email":"tristan.lins@bit3.de",
+            "homepage":"http://bit3.de",
+            "role":"Developer"
+        }
+    ],
+    "support":{
+        "issues":"https://github.com/contao-community-alliance/build-system-tool-autoloading-validation/issues",
+        "irc":"irc://irc.freenode.org/contao.dev",
+        "source":"https://github.com/contao-community-alliance/build-system-tool-autoloading-validation"
+    },
+    "autoload": {
+        "psr-4": {
+            "ContaoCommunityAlliance\\BuildSystem\\Tool\\AutoloadingValidation\\" : "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ContaoCommunityAlliance\\BuildSystem\\Tool\\AutoloadingValidation\\Test\\" : "tests"
+        }
+    },
+    "require": {
+        "php": ">=5.3.4",
+        "symfony/console": "~2.3"
+    },
+    "require-dev": {
+        "contao-community-alliance/build-system-all-tasks": "~1.0",
+        "contao-community-alliance/coding-standard": "~1.0"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    },
+    "bin": ["bin/check-autoloading.php"],
+    "prefer-stable": true,
+    "minimum-stability": "dev"
+}
