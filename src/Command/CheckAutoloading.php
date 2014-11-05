@@ -460,39 +460,33 @@ class CheckAutoloading extends Command
     }
 
     /**
-     * {@inheritDoc}
+     * Ensure that a composer autoload section is present.
+     *
+     * @param array $composer The composer json contents.
+     *
+     * @return bool
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    public function hasAutoloadSection($composer)
     {
-        $this->input    = $input;
-        $this->output   = $output;
-        $this->classMap = array();
-        $this->loader   = new ClassLoader();
-
-        $rootDir  = realpath($input->getArgument('root-dir'));
-        $composer = json_decode(file_get_contents($rootDir . '/composer.json'), true);
-
-        if (!isset($composer['autoload'])) {
-            if (OutputInterface::VERBOSITY_VERBOSE <= $output->getVerbosity()) {
-                $output->writeln('<info>No autoload information found, skipping test.</info>');
+        if (!(isset($composer['autoload']) && isset($composer['autoload-dev']))) {
+            if (OutputInterface::VERBOSITY_VERBOSE <= $this->output->getVerbosity()) {
+                $this->output->writeln('<info>No autoload information found, skipping test.</info>');
             }
-            return 0;
+
+            return false;
         }
 
-        if (!$this->validateComposerAutoLoading($composer['autoload'], $rootDir, $output)) {
-            $output->writeln('<error>The autoload information in composer.json is incorrect!</error>');
-            return 1;
-        }
+        return true;
+    }
 
-        if (!$this->validateComposerAutoLoading($composer['autoload-dev'], $rootDir, $output)) {
-            $output->writeln('<error>The autoload-dev information in composer.json is incorrect!</error>');
-            return 1;
-        }
-
-        if (OutputInterface::VERBOSITY_VERBOSE <= $output->getVerbosity()) {
-            $output->writeln('<info>The autoloader information in composer.json is correct.</info>');
-        }
-
+    /**
+     * Check that the auto loading information is correct.
+     *
+     * @return bool
+     */
+    public function tryLoadAllClasses()
+    {
+        $result = true;
         // Try hacking via Contao autoloader.
         spl_autoload_register(function ($class) {
             spl_autoload_call('Contao\\' . $class);
@@ -506,24 +500,70 @@ class CheckAutoloading extends Command
             if (!class_exists($class, false) && !interface_exists($class, false)) {
                 try {
                     if (!$this->loader->loadClass($class)) {
-                        $output->writeln(
+                        $this->output->writeln(
                             sprintf(
                                 '<error>The autoloader could not load %s (should be found from file %s).</error>',
                                 $class,
                                 $file
                             )
                         );
+                        $result = false;
                     }
                 } catch (\ErrorException $exception) {
-                    $output->writeln(
+                    $this->output->writeln(
                         sprintf(
                             '<error>ERROR loading class %s: "%s".</error>',
                             $class,
                             $exception->getMessage()
                         )
                     );
+                    $result = false;
                 }
             }
+        }
+
+        return $result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $this->input    = $input;
+        $this->output   = $output;
+        $this->classMap = array();
+        $this->loader   = new ClassLoader();
+
+        $rootDir  = realpath($input->getArgument('root-dir'));
+        $composer = json_decode(file_get_contents($rootDir . '/composer.json'), true);
+
+        if (!$this->hasAutoloadSection($composer)) {
+            return 0;
+        }
+
+        if (isset($composer['autoload'])) {
+            if (!$this->validateComposerAutoLoading($composer['autoload'], $rootDir, $output)) {
+                $output->writeln('<error>The autoload information in composer.json is incorrect!</error>');
+                return 1;
+            }
+        }
+
+        if (isset($composer['autoload-dev'])) {
+            if (!$this->validateComposerAutoLoading($composer['autoload-dev'], $rootDir, $output)) {
+                $output->writeln('<error>The autoload-dev information in composer.json is incorrect!</error>');
+                return 1;
+            }
+        }
+
+        if (!$this->tryLoadAllClasses()) {
+            $output->writeln('<error>The autoloading of all classes failed!</error>');
+
+            return 1;
+        }
+
+        if (OutputInterface::VERBOSITY_VERBOSE <= $output->getVerbosity()) {
+            $output->writeln('<info>The autoloader information in composer.json is correct.</info>');
         }
 
         return 0;
