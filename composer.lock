@@ -69,12 +69,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/contao-community-alliance/build-system.git",
-                "reference": "40a6cdfc9f42299dcc008ee8d484f11a373fe91a"
+                "reference": "650e17838fe444a10db43784c6326e3b47a2a9ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/contao-community-alliance/build-system/zipball/40a6cdfc9f42299dcc008ee8d484f11a373fe91a",
-                "reference": "40a6cdfc9f42299dcc008ee8d484f11a373fe91a",
+                "url": "https://api.github.com/repos/contao-community-alliance/build-system/zipball/650e17838fe444a10db43784c6326e3b47a2a9ff",
+                "reference": "650e17838fe444a10db43784c6326e3b47a2a9ff",
                 "shasum": ""
             },
             "suggest": {
@@ -106,7 +106,7 @@
                 }
             ],
             "description": "CCABS base system.",
-            "time": "2014-10-30 09:54:37"
+            "time": "2014-11-05 00:08:14"
         },
         {
             "name": "contao-community-alliance/build-system-all-tasks",
@@ -114,17 +114,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/contao-community-alliance/build-system-all-tasks.git",
-                "reference": "545671bb27b8a437cc71c6f48ec5c99169cf7a40"
+                "reference": "22f280266d96729d41e041cb5b8d4ff3c2920eef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/contao-community-alliance/build-system-all-tasks/zipball/545671bb27b8a437cc71c6f48ec5c99169cf7a40",
-                "reference": "545671bb27b8a437cc71c6f48ec5c99169cf7a40",
+                "url": "https://api.github.com/repos/contao-community-alliance/build-system-all-tasks/zipball/22f280266d96729d41e041cb5b8d4ff3c2920eef",
+                "reference": "22f280266d96729d41e041cb5b8d4ff3c2920eef",
                 "shasum": ""
             },
             "require": {
                 "contao-community-alliance/build-system": "~1.0",
                 "contao-community-alliance/build-system-repository-git": "~1.0",
+                "contao-community-alliance/build-system-tool-autoloading-validation": "~1.0",
                 "contao-community-alliance/build-system-tool-branch-alias-validation": "~1.0",
                 "contao-community-alliance/build-system-tool-travis-configuration-check": "~1.0",
                 "pdepend/pdepend": "2.0.*",
@@ -159,7 +160,7 @@
                 }
             ],
             "description": "Meta package to enable all tasks",
-            "time": "2014-10-11 10:19:03"
+            "time": "2014-11-05 00:10:26"
         },
         {
             "name": "contao-community-alliance/build-system-logger",
