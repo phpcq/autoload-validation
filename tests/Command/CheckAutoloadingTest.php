@@ -227,6 +227,14 @@ class CheckAutoloadingTest extends \PHPUnit_Framework_TestCase
             ),
             array(
                 'classMap'  => array(
+                    'ContaoCommunityAlliance\Dca\Builder\Builder' => '/usr/includes/ContaoCommunityAlliance/Dca/Builder/Builder.php',
+                ),
+                'subPath'   => '/usr/includes',
+                'namespace' => 'ContaoCommunityAlliance',
+                'result'    => true,
+            ),
+            array(
+                'classMap'  => array(
                     'Acme\Log\Writer\File_Writer' => './acme-log-writer/lib/Acme/Log/Writer/File_Writerr.php',
                 ),
                 'subPath'   => './acme-log-writer/lib',

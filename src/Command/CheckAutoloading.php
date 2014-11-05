@@ -102,7 +102,10 @@ class CheckAutoloading extends Command
      */
     protected function getNameSpaceFromClassName($class)
     {
-        return str_replace('\\' . $this->getClassFromClassName($class), '', $class);
+        $chunks = explode('\\', $class);
+        array_pop($chunks);
+
+        return implode('\\', $chunks);
     }
 
     /**
