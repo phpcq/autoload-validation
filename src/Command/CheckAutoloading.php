@@ -493,10 +493,36 @@ class CheckAutoloading extends Command
             $output->writeln('<info>The autoloader information in composer.json is correct.</info>');
         }
 
+        // Try hacking via Contao autoloader.
+        spl_autoload_register(function ($class) {
+            spl_autoload_call('Contao\\' . $class);
+            if (!class_exists($class, false)) {
+                class_alias('Contao\\' . $class, $class);
+            }
+        });
+
         // Now try to autoload all classes.
-        foreach (array_values($this->classMap) as $class) {
-            if (!class_exists($class)) {
-                $this->loader->loadClass($class);
+        foreach ($this->classMap as $class => $file) {
+            if (!class_exists($class, false) && !interface_exists($class, false)) {
+                try {
+                    if (!$this->loader->loadClass($class)) {
+                        $output->writeln(
+                            sprintf(
+                                '<error>The autoloader could not load %s (should be found from file %s).</error>',
+                                $class,
+                                $file
+                            )
+                        );
+                    }
+                } catch (\ErrorException $exception) {
+                    $output->writeln(
+                        sprintf(
+                            '<error>ERROR loading class %s: "%s".</error>',
+                            $class,
+                            $exception->getMessage()
+                        )
+                    );
+                }
             }
         }
 
