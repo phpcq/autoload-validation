@@ -4,8 +4,8 @@
 [![License](http://img.shields.io/packagist/l/contao-community-alliance/build-system-tool-autoloading-validation.svg?style=flat-square)](https://github.com/contao-community-alliance/build-system-tool-autoloading-validation/blob/master/LICENSE)
 [![Downloads](http://img.shields.io/packagist/dt/contao-community-alliance/build-system-tool-autoloading-validation.svg?style=flat-square)](https://packagist.org/packages/contao-community-alliance/build-system-tool-autoloading-validation)
 
-Validate branch alias against latest tag.
-=========================================
+Validate the autoload information within composer.json.
+=======================================================
 
 This is useful to ensure that all classes covered by the defined autoload information in the `composer.json`.
 
