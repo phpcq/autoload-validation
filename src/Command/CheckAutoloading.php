@@ -489,9 +489,12 @@ class CheckAutoloading extends Command
         $result = true;
         // Try hacking via Contao autoloader.
         spl_autoload_register(function ($class) {
-            spl_autoload_call('Contao\\' . $class);
-            if (!class_exists($class, false)) {
-                class_alias('Contao\\' . $class, $class);
+            if (substr($class, 0, 7) !== 'Contao\\') {
+                spl_autoload_call('Contao\\' . $class);
+
+                if (class_exists('Contao\\' . $class, false) && !class_exists($class, false)) {
+                    class_alias('Contao\\' . $class, $class);
+                }
             }
         });
 
