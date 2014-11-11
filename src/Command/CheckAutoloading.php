@@ -480,6 +480,20 @@ class CheckAutoloading extends Command
     }
 
     /**
+     * Check if the given interface/class/trait is already loaded.
+     *
+     * @param string $namespacedName The full name of the class/interface/trait.
+     *
+     * @return bool
+     */
+    protected function isLoaded($namespacedName)
+    {
+        return (class_exists($namespacedName, false)
+            || interface_exists($namespacedName, false)
+            || (function_exists('trait_exists') && trait_exists($namespacedName, false)));
+    }
+
+    /**
      * Check that the auto loading information is correct.
      *
      * @return bool
@@ -500,7 +514,7 @@ class CheckAutoloading extends Command
 
         // Now try to autoload all classes.
         foreach ($this->classMap as $class => $file) {
-            if (!class_exists($class, false) && !interface_exists($class, false)) {
+            if (!$this->isLoaded($class)) {
                 try {
                     if (!$this->loader->loadClass($class)) {
                         $this->output->writeln(
