@@ -501,6 +501,12 @@ class CheckAutoloading extends Command
     public function tryLoadAllClasses()
     {
         $result = true;
+
+        // Trick Contao 2.11 into believing it is installed.
+        if (!defined('TL_ROOT')) {
+            define('TL_ROOT', '/tmp');
+        }
+
         // Try hacking via Contao autoloader.
         spl_autoload_register(function ($class) {
             if (substr($class, 0, 7) !== 'Contao\\') {
