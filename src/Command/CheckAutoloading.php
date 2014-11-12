@@ -468,7 +468,7 @@ class CheckAutoloading extends Command
      */
     public function hasAutoloadSection($composer)
     {
-        if (!(isset($composer['autoload']) && isset($composer['autoload-dev']))) {
+        if (!(isset($composer['autoload']) || isset($composer['autoload-dev']))) {
             if (OutputInterface::VERBOSITY_VERBOSE <= $this->output->getVerbosity()) {
                 $this->output->writeln('<info>No autoload information found, skipping test.</info>');
             }
