@@ -12,7 +12,7 @@
          bootstrap="tests/bootstrap.php"
 >
     <testsuites>
-        <testsuite name="Build system branch alias validation test suite">
+        <testsuite name="Autoload validation test suite">
             <directory>./tests/Command</directory>
         </testsuite>
     </testsuites>

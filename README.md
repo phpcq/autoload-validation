@@ -1,8 +1,8 @@
-[![Version](http://img.shields.io/packagist/v/contao-community-alliance/build-system-tool-autoloading-validation.svg?style=flat-square)](https://packagist.org/packages/contao-community-alliance/build-system-tool-autoloading-validation)
-[![Stable Build Status](http://img.shields.io/travis/contao-community-alliance/build-system-tool-autoloading-validation/master.svg?style=flat-square)](https://travis-ci.org/contao-community-alliance/build-system-tool-autoloading-validation)
-[![Upstream Build Status](http://img.shields.io/travis/contao-community-alliance/build-system-tool-autoloading-validation/develop.svg?style=flat-square)](https://travis-ci.org/contao-community-alliance/build-system-tool-autoloading-validation)
-[![License](http://img.shields.io/packagist/l/contao-community-alliance/build-system-tool-autoloading-validation.svg?style=flat-square)](https://github.com/contao-community-alliance/build-system-tool-autoloading-validation/blob/master/LICENSE)
-[![Downloads](http://img.shields.io/packagist/dt/contao-community-alliance/build-system-tool-autoloading-validation.svg?style=flat-square)](https://packagist.org/packages/contao-community-alliance/build-system-tool-autoloading-validation)
+[![Version](http://img.shields.io/packagist/v/phpcq/autoload-validation.svg?style=flat-square)](https://packagist.org/packages/phpcq/autoload-validation)
+[![Stable Build Status](http://img.shields.io/travis/phpcq/autoload-validation/master.svg?style=flat-square)](https://travis-ci.org/phpcq/autoload-validation)
+[![Upstream Build Status](http://img.shields.io/travis/phpcq/autoload-validation/develop.svg?style=flat-square)](https://travis-ci.org/phpcq/autoload-validation)
+[![License](http://img.shields.io/packagist/l/phpcq/autoload-validation.svg?style=flat-square)](https://github.com/phpcq/autoload-validation/blob/master/LICENSE)
+[![Downloads](http://img.shields.io/packagist/dt/phpcq/autoload-validation.svg?style=flat-square)](https://packagist.org/packages/phpcq/autoload-validation)
 
 Validate the autoload information within composer.json.
 =======================================================
@@ -14,7 +14,7 @@ Usage
 
 Add to your `composer.json` in the `require-dev` section:
 ```
-"contao-community-alliance/build-system-tool-autoloading-validation": "~1.0"
+"phpcq/autoload-validation": "~1.0"
 ```
 
 Call the binary:

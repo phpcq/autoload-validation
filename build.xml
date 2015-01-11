@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- This project is using the Contao Community Alliance Build System (CCABS)
+ This project is using the PHP code quality project (PHPCQ).
 
  For documentation visit:
-   https://github.com/contao-community-alliance/build-system
+   https://github.com/phpcq/phpcq
 
 -->
-<project name="build system check autoloading" default="build">
-    <import file="vendor/contao-community-alliance/build-system/ccabs.main.xml" />
+<project name="phpcq/autoload-validation" default="build">
+    <import file="vendor/phpcq/phpcq/phpcq.main.xml" />
 
-    <!-- we have to override the command as otherwise ccabs won't find it. We are the root repository. -->
-    <target name="autoloading-validation">
+    <!-- we have to override the command as otherwise phpcq won't find it. We are the root repository. -->
+    <target name="autoload-validation">
         <exec dir="${basedir}" executable="bin/check-autoloading.php" failonerror="true" taskname="check-autoloading">
             <arg line="${basedir}"/>
         </exec>

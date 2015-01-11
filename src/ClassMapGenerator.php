@@ -11,7 +11,7 @@
  * @license MIT
  */
 
-namespace ContaoCommunityAlliance\BuildSystem\Tool\AutoloadingValidation;
+namespace PhpCodeQuality\AutoloadValidation;
 
 use Symfony\Component\Finder\Finder;
 

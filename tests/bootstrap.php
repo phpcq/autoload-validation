@@ -1,13 +1,22 @@
 <?php
 
 /**
- * This file is part of the Contao Community Alliance Build System tools.
+ * This file is part of phpcq/autoload-validation.
  *
- * @copyright 2014 Contao Community Alliance <https://c-c-a.org>
- * @author    Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @package   contao-community-alliance/build-system-tool-branch-alias-validation
- * @license   MIT
- * @link      https://c-c-a.org
+ * (c) 2014 Christian Schiffler, Tristan Lins
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * This project is provided in good faith and hope to be usable by anyone.
+ *
+ * @package    phpcq/autoload-validation
+ * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Tristan Lins <tristan@lins.io>
+ * @copyright  Christian Schiffler <c.schiffler@cyberspectrum.de>, Tristan Lins <tristan@lins.io>
+ * @link       https://github.com/phpcq/autoload-validation
+ * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
+ * @filesource
  */
 
 error_reporting(E_ALL);
