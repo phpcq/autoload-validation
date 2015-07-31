@@ -181,7 +181,7 @@ class CheckAutoloading extends Command
             $classNs = $this->getNameSpaceFromClassName($class);
             $classNm = $this->getClassFromClassName($class);
 
-            if (substr($classNs, 0, $nsLen) !== $namespace) {
+            if ($namespace && substr($classNs, 0, $nsLen) !== $namespace) {
                 $result = false;
 
                 $this->output->writeln(
