@@ -210,15 +210,14 @@ class CheckAutoloading extends Command
                 continue;
             }
 
-            $fileNameShould = str_replace(
-                '//',
-                '/',
-                $subPath . '/' . str_replace(
-                    '\\',
-                    '/',
-                    $classNs . '/' . $classNm
-                )
-            );
+            $classNm = ltrim('\\' . $classNm, '\\');
+            $fileNameShould  = $subPath . DIRECTORY_SEPARATOR;
+            if ($classNs) {
+                $fileNameShould .= str_replace('\\', DIRECTORY_SEPARATOR, $classNs) . DIRECTORY_SEPARATOR;
+            }
+
+            $fileNameShould .= str_replace('_', DIRECTORY_SEPARATOR, $classNm);
+
             if ($fileNameShould !== $this->cutExtensionFromFileName($file)) {
                 $result = false;
                 $this->output->writeln(
