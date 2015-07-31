@@ -8,6 +8,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  *
+ * @author Gyula Sallai <salla016@gmail.com>
+ * @author Jordi Boggiano <j.boggiano@seld.be>
+ * @author Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author Tristan Lins <tristan@lins.io>
+ *
  * @license MIT
  */
 
@@ -17,9 +22,6 @@ use Symfony\Component\Finder\Finder;
 
 /**
  * A ClassMapGenerator from composer.
- *
- * @author Gyula Sallai <salla016@gmail.com>
- * @author Jordi Boggiano <j.boggiano@seld.be>
  */
 class ClassMapGenerator
 {
