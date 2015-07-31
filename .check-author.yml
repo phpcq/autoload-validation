@@ -1,0 +1,6 @@
+exclude:
+  languages
+
+copy-left:
+  "Gyula Sallai <salla016@gmail.com>": "src/ClassMapGenerator.php"
+  "Jordi Boggiano <j.boggiano@seld.be>": "src/ClassMapGenerator.php"
