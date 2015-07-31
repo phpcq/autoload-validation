@@ -210,8 +210,8 @@ class CheckAutoloading extends Command
                 continue;
             }
 
-            $classNm = ltrim('\\' . $classNm, '\\');
-            $fileNameShould  = $subPath . DIRECTORY_SEPARATOR;
+            $classNm        = ltrim('\\' . $classNm, '\\');
+            $fileNameShould = $subPath . DIRECTORY_SEPARATOR;
             if ($classNs) {
                 $fileNameShould .= str_replace('\\', DIRECTORY_SEPARATOR, $classNs) . DIRECTORY_SEPARATOR;
             }
@@ -348,9 +348,9 @@ class CheckAutoloading extends Command
     /**
      * Check that the auto loading information is correct.
      *
-     * @param array    $information The autoload information.
+     * @param array  $information The autoload information.
      *
-     * @param string   $baseDir     The base directory.
+     * @param string $baseDir     The base directory.
      *
      * @return bool
      */
@@ -428,9 +428,9 @@ class CheckAutoloading extends Command
     /**
      * Check that the auto loading information is correct.
      *
-     * @param array           $information The autoload information.
+     * @param array  $information The autoload information.
      *
-     * @param string          $baseDir     The base directory.
+     * @param string $baseDir     The base directory.
      *
      * @return bool
      *
