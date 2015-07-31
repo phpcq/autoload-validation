@@ -353,13 +353,11 @@ class CheckAutoloadingTest extends \PHPUnit_Framework_TestCase
     public function testValidateComposerAutoLoadingClassMapClassMap($classMap, $subPath, $result)
     {
         $command = $this->getCommand();
-        $realMessages = array();
         $this->assertEquals(
             $result,
             $command->validateComposerAutoLoadingClassMapClassMap(
                 $classMap,
-                $subPath,
-                $realMessages
+                $subPath
             ),
             $output = $this->getOutputFromCommand($command)
         );

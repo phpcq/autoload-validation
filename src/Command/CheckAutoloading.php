@@ -166,7 +166,7 @@ class CheckAutoloading extends Command
      *
      * @param string $subPath   The base directory.
      *
-     * @param string $namespace The namespace prefix defined for psr-4.
+     * @param string $namespace The namespace prefix defined for psr-0.
      *
      * @return bool
      */
@@ -353,11 +353,9 @@ class CheckAutoloading extends Command
      *
      * @param string   $baseDir     The base directory.
      *
-     * @param string[] $messages    The error messages.
-     *
      * @return bool
      */
-    public function validateComposerAutoLoadingPsr4($information, $baseDir, &$messages)
+    public function validateComposerAutoLoadingPsr4($information, $baseDir)
     {
         $result = true;
         // Scan all directories mentioned and validate the class map against the entries.
@@ -369,8 +367,7 @@ class CheckAutoloading extends Command
             if (!$this->validateComposerAutoLoadingPsr4ClassMap(
                 $classMap,
                 $subPath,
-                $namespace,
-                $messages
+                $namespace
             )) {
                 $result = false;
             }
@@ -436,34 +433,27 @@ class CheckAutoloading extends Command
      *
      * @param string          $baseDir     The base directory.
      *
-     * @param OutputInterface $output      The output to use for error messages.
-     *
      * @return bool
      *
      * @throws \RuntimeException When an unknown auto loader type is encountered.
      */
-    public function validateComposerAutoLoading($information, $baseDir, OutputInterface $output)
+    public function validateComposerAutoLoading($information, $baseDir)
     {
-        $result   = true;
-        $messages = array();
+        $result = true;
         foreach ($information as $type => $content) {
             switch ($type) {
                 case 'psr-0':
-                    $result = $this->validateComposerAutoLoadingPsr0($content, $baseDir, $messages) && $result;
+                    $result = $this->validateComposerAutoLoadingPsr0($content, $baseDir) && $result;
                     break;
                 case 'psr-4':
-                    $result = $this->validateComposerAutoLoadingPsr4($content, $baseDir, $messages) && $result;
+                    $result = $this->validateComposerAutoLoadingPsr4($content, $baseDir) && $result;
                     break;
                 case 'classmap':
-                    $result = $this->validateComposerAutoLoadingClassMap($content, $baseDir, $messages) && $result;
+                    $result = $this->validateComposerAutoLoadingClassMap($content, $baseDir) && $result;
                     break;
                 default:
                     throw new \RuntimeException('Unknown auto loader type ' . $type . ' encountered!');
             }
-        }
-
-        foreach ($messages as $message) {
-            $output->writeln($message);
         }
 
         return $result;
@@ -576,14 +566,14 @@ class CheckAutoloading extends Command
         }
 
         if (isset($composer['autoload'])) {
-            if (!$this->validateComposerAutoLoading($composer['autoload'], $rootDir, $output)) {
+            if (!$this->validateComposerAutoLoading($composer['autoload'], $rootDir)) {
                 $output->writeln('<error>The autoload information in composer.json is incorrect!</error>');
                 return 1;
             }
         }
 
         if (isset($composer['autoload-dev'])) {
-            if (!$this->validateComposerAutoLoading($composer['autoload-dev'], $rootDir, $output)) {
+            if (!$this->validateComposerAutoLoading($composer['autoload-dev'], $rootDir)) {
                 $output->writeln('<error>The autoload-dev information in composer.json is incorrect!</error>');
                 return 1;
             }
