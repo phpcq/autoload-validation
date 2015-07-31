@@ -213,7 +213,7 @@ class CheckAutoloadingTest extends \PHPUnit_Framework_TestCase
         return array(
             array(
                 'classMap'  => array(
-                    'Acme\Log\Writer\File_Writer' => './acme-log-writer/lib/Acme/Log/Writer/File_Writer.php',
+                    'Acme\Log\Writer\File_Writer' => './acme-log-writer/lib/Acme/Log/Writer/File/Writer.php',
                 ),
                 'subPath'   => './acme-log-writer/lib',
                 'namespace' => 'Acme\Log\Writer',
@@ -221,10 +221,34 @@ class CheckAutoloadingTest extends \PHPUnit_Framework_TestCase
             ),
             array(
                 'classMap'  => array(
-                    'Acme\Log\Writer\File_Writer' => './acme-log-writer/lib/Acme/Log/Writer/File_Writer.php',
+                    'Acme\Log\Writer\File_Writer' => './acme-log-writer/lib/Acme/Log/Writer/File/Writer.php',
                 ),
                 'subPath'   => './acme-log-writer/lib',
                 'namespace' => 'Acme',
+                'result'    => true,
+            ),
+            array(
+                'classMap'  => array(
+                    'Acme_Log\Writer_File\Writer' => './acme-log-writer/lib/Acme_Log/Writer_File/Writer.php',
+                ),
+                'subPath'   => './acme-log-writer/lib',
+                'namespace' => '',
+                'result'    => true,
+            ),
+            array(
+                'classMap'  => array(
+                    'Acme_Log\Writer_File\Writer' => './acme-log-writer/lib/Acme_Log/Writer_File/Writer.php',
+                ),
+                'subPath'   => './acme-log-writer/lib',
+                'namespace' => 'Acme_Log\Writer_File',
+                'result'    => true,
+            ),
+            array(
+                'classMap'  => array(
+                    'Acme_Log_Writer_File_Writer' => './acme-log-writer/lib/Acme/Log/Writer/File/Writer.php',
+                ),
+                'subPath'   => './acme-log-writer/lib',
+                'namespace' => '',
                 'result'    => true,
             ),
             array(
@@ -273,6 +297,22 @@ class CheckAutoloadingTest extends \PHPUnit_Framework_TestCase
                 ),
                 'subPath'   => '/usr/includes',
                 'namespace' => 'Zend\Acl',
+                'result'    => false,
+            ),
+            array(
+                'classMap'  => array(
+                    'Acme\Log\Writer\File_Writer' => './acme-log-writer/lib/Acme/Log/Writer/File_Writer.php',
+                ),
+                'subPath'   => './acme-log-writer/lib',
+                'namespace' => 'Acme\Log\Writer',
+                'result'    => false,
+            ),
+            array(
+                'classMap'  => array(
+                    'Acme\Log\Writer\File_Writer' => './acme-log-writer/lib/Acme/Log/Writer/File_Writer.php',
+                ),
+                'subPath'   => './acme-log-writer/lib',
+                'namespace' => 'Acme',
                 'result'    => false,
             ),
         );
