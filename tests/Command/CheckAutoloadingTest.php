@@ -315,6 +315,14 @@ class CheckAutoloadingTest extends \PHPUnit_Framework_TestCase
                 'namespace' => 'Acme',
                 'result'    => false,
             ),
+            array(
+                'classMap'  => array(
+                    'Foo\\Bar\\Baz' => '/src/Foo/Bar/Baz.php',
+                ),
+                'subPath'   => '/src/',
+                'namespace' => 'Foo',
+                'result'    => true,
+            ),
         );
     }
 
