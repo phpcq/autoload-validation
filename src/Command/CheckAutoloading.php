@@ -211,7 +211,7 @@ class CheckAutoloading extends Command
             }
 
             $classNm        = ltrim('\\' . $classNm, '\\');
-            $fileNameShould = $subPath . DIRECTORY_SEPARATOR;
+            $fileNameShould = rtrim($subPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
             if ($classNs) {
                 $fileNameShould .= str_replace('\\', DIRECTORY_SEPARATOR, $classNs) . DIRECTORY_SEPARATOR;
             }
