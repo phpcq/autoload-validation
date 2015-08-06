@@ -323,6 +323,30 @@ class CheckAutoloadingTest extends \PHPUnit_Framework_TestCase
                 'namespace' => 'Foo',
                 'result'    => true,
             ),
+            array(
+                'classMap'  => array(
+                    'Vendor_PearStyle_NameSpace_ClassName' => '/includes/Vendor/PearStyle/NameSpace/ClassName.php',
+                ),
+                'subPath'   => '/includes',
+                'namespace' => 'Vendor_PearStyle_NameSpace_',
+                'result'    => true,
+            ),
+            array(
+                'classMap'  => array(
+                    'Vendor_PearStyle_NameSpace_ClassNam' => '/includes/Vendor/PearStyle/NameSpace/ClassName.php',
+                ),
+                'subPath'   => '/usr/includes',
+                'namespace' => 'Vendor_PearStyle_NameSpace_',
+                'result'    => false,
+            ),
+            array(
+                'classMap'  => array(
+                    'Vendor_PearStyle_NameSpace_ClassName' => '/includes/Vendor/PearStyle/NameSpace/ClassName.php',
+                ),
+                'subPath'   => '/usr/includes',
+                'namespace' => 'Vendor_PearStyle_NameSpace',
+                'result'    => false,
+            ),
         );
     }
 
