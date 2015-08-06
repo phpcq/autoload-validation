@@ -181,7 +181,8 @@ class CheckAutoloading extends Command
             $classNs = $this->getNameSpaceFromClassName($class);
             $classNm = $this->getClassFromClassName($class);
 
-            if ($namespace && substr($classNs, 0, $nsLen) !== $namespace) {
+            // PEAR-like class name or namespace does not match.
+            if ((false !== strrpos($class, '\\')) && $namespace && substr($classNs, 0, $nsLen) !== $namespace) {
                 $result = false;
 
                 $this->output->writeln(
