@@ -23,6 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation\Command;
 
 use Composer\Autoload\ClassLoader;
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
+use PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -516,6 +517,8 @@ class CheckAutoloading extends Command
                     class_alias('Contao\\' . $class, $class);
                 }
             }
+
+            throw new ParentClassNotFoundException($class);
         });
 
         // Now try to autoload all classes.
@@ -531,6 +534,16 @@ class CheckAutoloading extends Command
                             )
                         );
                         $result = false;
+                    }
+                } catch (ParentClassNotFoundException $exception) {
+                    if (OutputInterface::VERBOSITY_VERBOSE <= $this->output->getVerbosity()) {
+                        $this->output->writeln(
+                            sprintf(
+                                '<info>Loading class %s failed due to missing parent class: "%s".</info>',
+                                $class,
+                                $exception->getParentClass()
+                            )
+                        );
                     }
                 } catch (\ErrorException $exception) {
                     $this->output->writeln(
