@@ -29,6 +29,29 @@ use Symfony\Component\Finder\Finder;
 class ClassMapGenerator
 {
     /**
+     * Iterate over all files in the given directory searching for classes.
+     *
+     * @param \Iterator|string $path      The path to search in or an iterator.
+     *
+     * @param string           $whitelist Regex that matches against the file path.
+     *
+     * @param string           $namespace Optional namespace prefix to filter by.
+     *
+     * @param string[]         $messages  The error message list to which errors shall be appended to.
+     *
+     * @return array A class map array
+     *
+     * @throws \RuntimeException When the path could not be scanned.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     */
+    public function scan($path, $whitelist = null, $namespace = null, &$messages = null)
+    {
+        return static::createMap($path, $whitelist, $namespace, $messages);
+    }
+
+    /**
      * Generate a class map file.
      *
      * @param \Traversable $dirs Directories or a single path to search in.
@@ -66,7 +89,7 @@ class ClassMapGenerator
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      */
-    public static function createMap($path, $whitelist = null, $namespace = null, $messages = null)
+    public static function createMap($path, $whitelist = null, $namespace = null, &$messages = null)
     {
         if (is_string($path)) {
             if (is_file($path)) {
