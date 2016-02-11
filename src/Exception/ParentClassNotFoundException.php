@@ -12,9 +12,9 @@
  *
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  Christian Schiffler <c.schiffler@cyberspectrum.de>, Tristan Lins <tristan@lins.io>
- * @link       https://github.com/phpcq/autoload-validation
+ * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
+ * @link       https://github.com/phpcq/autoload-validation
  * @filesource
  */
 
