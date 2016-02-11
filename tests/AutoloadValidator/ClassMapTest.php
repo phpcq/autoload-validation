@@ -95,7 +95,7 @@ class ClassMapTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that the class map throws an exception when a class file is retreived for an unregistered class.
+     * Test that the class map throws an exception when a class file is retrieved for an unregistered class.
      *
      * @return void
      *

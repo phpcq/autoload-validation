@@ -70,7 +70,7 @@ class ClassMap implements \IteratorAggregate
     public function add($class, $file)
     {
         if ($this->has($class)) {
-            if ($localFile = $this->getFileFor($class) !== $file) {
+            if (($localFile = $this->getFileFor($class)) !== $file) {
                 throw new ClassAlreadyRegisteredException($class, $localFile);
             }
         }

@@ -1,6 +1,6 @@
 <?php
 
-/*
+/**
  * This file is copied from the Symfony package.
  *
  * (c) Fabien Potencier <fabien@symfony.com>
@@ -8,12 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  *
- * @author Gyula Sallai <salla016@gmail.com>
- * @author Jordi Boggiano <j.boggiano@seld.be>
- * @author Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @author Tristan Lins <tristan@lins.io>
- *
- * @license MIT
+ * @package    phpcq/autoload-validation
+ * @author     Gyula Sallai <salla016@gmail.com>
+ * @author     Jordi Boggiano <j.boggiano@seld.be>
+ * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Tristan Lins <tristan@lins.io>
+ * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
+ * @link       https://github.com/phpcq/autoload-validation
+ * @filesource
  */
 
 namespace PhpCodeQuality\AutoloadValidation;
