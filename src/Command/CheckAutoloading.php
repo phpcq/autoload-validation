@@ -22,7 +22,9 @@
 namespace PhpCodeQuality\AutoloadValidation\Command;
 
 use Composer\Autoload\ClassLoader;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
+use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
 use PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -53,7 +55,7 @@ class CheckAutoloading extends Command
     /**
      * The overall class map.
      *
-     * @var string[]
+     * @var ClassMap
      */
     protected $classMap;
 
@@ -146,16 +148,19 @@ class CheckAutoloading extends Command
     {
         $classMap = ClassMapGenerator::createMap($subPath, null, $namespace);
 
-        if (array_intersect($this->classMap, $classMap)) {
-            $this->output->writeln(
-                sprintf(
-                    '<info>The class(es) %s are available via multiple autoloader values.</info>',
-                    implode(', ', array_intersect($this->classMap, $classMap))
-                )
-            );
+        foreach ($classMap as $class => $file) {
+            try {
+                $this->classMap->add($class, $file);
+            } catch (ClassAlreadyRegisteredException $exception) {
+                $this->output->writeln(
+                    strtr(
+                        '<info>The class {class} is available via multiple autoloader values.</info>',
+                        array('{class}' => $class)
+                    ),
+                    OutputInterface::VERBOSITY_NORMAL
+                );
+            }
         }
-
-        $this->classMap = array_merge($this->classMap, $classMap);
 
         return $classMap;
     }
@@ -415,7 +420,20 @@ class CheckAutoloading extends Command
             $classMap = $this->createClassMap($subPath);
             $this->loader->addClassMap($classMap);
 
-            $this->classMap = array_merge($this->classMap, $classMap);
+            foreach ($classMap as $class => $file) {
+                try {
+                    $this->classMap->add($class, $file);
+                } catch (ClassAlreadyRegisteredException $exception) {
+                    $this->output->writeln(
+                        strtr(
+                            '<info>The class {class} is available via multiple autoloader values.</info>',
+                            array('{class}' => $class)
+                        ),
+                        OutputInterface::VERBOSITY_NORMAL
+                    );
+                }
+            }
+
             if (!$this->validateComposerAutoLoadingClassMapClassMap(
                 $classMap,
                 $subPath
@@ -568,7 +586,7 @@ class CheckAutoloading extends Command
     {
         $this->input    = $input;
         $this->output   = $output;
-        $this->classMap = array();
+        $this->classMap = new ClassMap();
         $this->loader   = new ClassLoader();
 
         $rootDir  = realpath($input->getArgument('root-dir'));

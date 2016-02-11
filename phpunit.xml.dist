@@ -13,7 +13,7 @@
 >
     <testsuites>
         <testsuite name="Autoload validation test suite">
-            <directory>./tests/Command</directory>
+            <directory>./tests</directory>
         </testsuite>
     </testsuites>
 
