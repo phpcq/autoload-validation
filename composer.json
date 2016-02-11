@@ -36,8 +36,7 @@
         "symfony/console": "~2.3"
     },
     "require-dev": {
-        "phpcq/all-tasks": "~1.0",
-        "phpcq/coding-standard": "~1.0"
+        "phpcq/all-tasks": "~1.1"
     },
     "extra": {
         "branch-alias": {
