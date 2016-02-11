@@ -35,6 +35,16 @@ class ClassMap implements \IteratorAggregate
     private $classes = [];
 
     /**
+     * Check if the class map is empty.
+     *
+     * @return bool
+     */
+    public function isEmpty()
+    {
+        return empty($this->classes);
+    }
+
+    /**
      * Check if the class has been registered.
      *
      * @param string $class The class to search.

@@ -36,7 +36,7 @@ class ClassMapTest extends \PHPUnit_Framework_TestCase
     {
         $classMap = new ClassMap();
         $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap', $classMap);
-        $this->assertInstanceOf('\Traversable', $classMap);
+        $this->assertTrue($classMap->isEmpty());
     }
 
     /**
@@ -65,6 +65,7 @@ class ClassMapTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($classMap, $classMap->add('Some\Class', '/some/path'));
         $this->assertTrue($classMap->has('Some\Class'));
         $this->assertSame('/some/path', $classMap->getFileFor('Some\Class'));
+        $this->assertFalse($classMap->isEmpty());
     }
 
     /**
