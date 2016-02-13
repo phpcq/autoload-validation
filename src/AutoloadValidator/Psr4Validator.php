@@ -21,43 +21,17 @@
 namespace PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 
 use Composer\Autoload\ClassLoader;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr4\ClassFoundInWrongFileViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr4\NameSpaceInvalidViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr4\NamespaceMustEndWithBackslashViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr4\NamespacePrefixMismatchViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr4\NoClassesFoundInPathViolation;
 
 /**
  * This class validates a "psr-4" entry from composer "autoload" sections.
  */
 class Psr4Validator extends AbstractValidator
 {
-    /**
-     * This error message is shown when the namespace portion of a psr-4 information is invalid.
-     */
-    const ERROR_PSR4_NAMESPACE_INVALID = '{name}: Invalid namespace value "{prefix}" found for prefix "{path}"';
-
-    /**
-     * Namespace declarations should end in \\ to make sure the autoloader responds exactly.
-     *
-     * For example Foo would match in FooBar so the trailing backslashes solve the problem:
-     * Foo\\ and FooBar\\ are distinct.
-     */
-    const ERROR_PSR4_NAMESPACE_MUST_END_WITH_BACKSLASH =
-        '{name}: Namespace declaration "{prefix}" must end in "\\\\".';
-
-    /**
-     * This error message is shown when a psr-0 information does not contain any classes.
-     */
-    const ERROR_PSR4_NO_CLASSES_FOUND_IN_PATH = '{name}: No classes found for psr-4 {prefix} prefix {path}';
-
-    /**
-     * This error message is shown when the namespace of a class does not match the expected psr-0 prefix.
-     */
-    const ERROR_PSR4_DETECTED_DOES_NOT_MATCH_EXPECTED_NAMESPACE =
-        '{name}: Class {class} namespace {detected} does not match psr-4 prefix {namespace} for directory {directory}!';
-
-    /**
-     * This error is shown when a class has been found in the wrong file.
-     */
-    const ERROR_PSR4_CLASS_FOUND_IN_WRONG_FILE =
-        '{name}: Class {class} found in file {file-is} should reside in file {file-should} (psr-4 prefix {prefix})';
-
     /**
      * {@inheritDoc}
      */
@@ -95,29 +69,21 @@ class Psr4Validator extends AbstractValidator
     {
         $subPath = str_replace('//', '/', $this->baseDir . '/' . $path);
         if (is_numeric($prefix)) {
-            $this->error(
-                static::ERROR_PSR4_NAMESPACE_INVALID,
-                array('prefix' => $prefix, 'path' => $subPath)
-            );
+            $this->report->error(new NameSpaceInvalidViolation($this->getName(), $prefix, $path));
 
             return;
         }
 
         if ($prefix && '\\' !== substr($prefix, -1)) {
-            $this->error(
-                static::ERROR_PSR4_NAMESPACE_MUST_END_WITH_BACKSLASH,
-                array('prefix' => $prefix)
-            );
+            $this->report->error(new NamespaceMustEndWithBackslashViolation($this->getName(), $prefix, $path));
 
             return;
         }
 
         $classMap = $this->classMapFromPath($subPath, $prefix);
-
         if (empty($classMap)) {
-            $this->error(
-                static::ERROR_PSR4_NO_CLASSES_FOUND_IN_PATH,
-                array('prefix' => $prefix, 'path' => $subPath)
+            $this->report->error(
+                new NoClassesFoundInPathViolation($this->getName(), $prefix, $path)
             );
 
             return;
@@ -148,13 +114,13 @@ class Psr4Validator extends AbstractValidator
             }
 
             if (substr($class, 0, $prefixLength) !== $prefix) {
-                $this->error(
-                    static::ERROR_PSR4_DETECTED_DOES_NOT_MATCH_EXPECTED_NAMESPACE,
-                    array(
-                        'class'     => $class,
-                        'detected'  => $this->getNameSpaceFromClassName($class),
-                        'prefix'    => $prefix,
-                        'directory' => $subPath
+                $this->report->error(
+                    new NamespacePrefixMismatchViolation(
+                        $this->getName(),
+                        $prefix,
+                        $subPath,
+                        $class,
+                        $this->getNameSpaceFromClassName($class)
                     )
                 );
 
@@ -172,13 +138,14 @@ class Psr4Validator extends AbstractValidator
             );
 
             if ($fileNameShould !== $this->cutExtensionFromFileName($file)) {
-                $this->error(
-                    static::ERROR_PSR4_CLASS_FOUND_IN_WRONG_FILE,
-                    array(
-                        'class' => $class,
-                        'file-is' => $file,
-                        'file-should' => $fileNameShould . $this->getExtensionFromFileName($file),
-                        'prefix' => $prefix,
+                $this->report->error(
+                    new ClassFoundInWrongFileViolation(
+                        $this->getName(),
+                        $prefix,
+                        $subPath,
+                        $class,
+                        $file,
+                        $fileNameShould . $this->getExtensionFromFileName($file)
                     )
                 );
             }
