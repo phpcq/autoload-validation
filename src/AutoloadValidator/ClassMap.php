@@ -32,7 +32,7 @@ class ClassMap implements \IteratorAggregate
      *
      * @var string[]
      */
-    private $classes = [];
+    private $classes = array();
 
     /**
      * Check if the class map is empty.
