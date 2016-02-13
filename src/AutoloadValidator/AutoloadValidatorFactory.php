@@ -51,7 +51,7 @@ class AutoloadValidatorFactory
      *
      * @return AbstractValidator[]
      */
-    public function generateValidatorsFromComposerJson($composer)
+    public function createFromComposerJson($composer)
     {
         $sections = $this->getAutoloadSectionNames($composer);
 
