@@ -22,7 +22,6 @@ namespace PhpCodeQuality\AutoloadValidation;
 
 use Composer\Autoload\ClassLoader;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator;
-use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
 use Psr\Log\LoggerInterface;
@@ -49,25 +48,21 @@ class AutoloadValidator
     /**
      * Create a new instance.
      *
-     * @param array                    $information The information from composer.json.
+     * @param array           $validators The validators to use.
      *
-     * @param AutoloadValidatorFactory $factory     The class map generator to use.
+     * @param LoggerInterface $logger     The logger to use.
      *
-     * @param LoggerInterface          $logger      The logger to use.
+     * @throws \InvalidArgumentException If any of the validators is not a validator.
      */
-    public function __construct($information, AutoloadValidatorFactory $factory, LoggerInterface $logger)
+    public function __construct($validators, LoggerInterface $logger)
     {
         $this->logger = $logger;
 
-        $sections = $this->getAutoloadSectionNames($information);
-
-        if (empty($sections)) {
-            $this->logger->info('No autoload information found, skipping test.');
-            return;
-        }
-
-        foreach ($sections as $section) {
-            $this->createValidatorsFromSection($factory, $section, $information[$section]);
+        foreach ($validators as $validator) {
+            if (!($validator instanceof AbstractValidator)) {
+                throw new \InvalidArgumentException('Invalid validator: ' . get_class($validator));
+            }
+            $this->validators[] = $validator;
         }
     }
 
@@ -144,46 +139,5 @@ class AutoloadValidator
         }
 
         return $classMap;
-    }
-
-
-    /**
-     * Ensure that a composer autoload section is present.
-     *
-     * @param array $composer The composer json contents.
-     *
-     * @return string[]
-     */
-    private function getAutoloadSectionNames($composer)
-    {
-        $sections = array();
-
-        if (array_key_exists('autoload', $composer)) {
-            $sections[] = 'autoload';
-        }
-
-        if (array_key_exists('autoload-dev', $composer)) {
-            $sections[] = 'autoload-dev';
-        }
-
-        return $sections;
-    }
-
-    /**
-     * Create all validators for the passed section.
-     *
-     * @param AutoloadValidatorFactory $factory     The class map generator to use.
-     *
-     * @param string                   $sectionName The name of the autoload section (autoload or autoload-dev).
-     *
-     * @param array                    $section     The autoload section from composer.json.
-     *
-     * @return void
-     */
-    private function createValidatorsFromSection(AutoloadValidatorFactory $factory, $sectionName, $section)
-    {
-        foreach ($section as $type => $content) {
-            $this->validators[] = $factory->createValidator($sectionName, $type, $content);
-        }
     }
 }

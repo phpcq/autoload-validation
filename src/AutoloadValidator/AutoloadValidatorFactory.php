@@ -45,6 +45,30 @@ class AutoloadValidatorFactory
     }
 
     /**
+     * Generate validators for all information from the passed composer.json array.
+     *
+     * @param array $composer The composer.json data.
+     *
+     * @return AbstractValidator[]
+     */
+    public function generateValidatorsFromComposerJson($composer)
+    {
+        $sections = $this->getAutoloadSectionNames($composer);
+
+        if (empty($sections)) {
+            $this->logger->info('No autoload information found, skipping test.');
+            return array();
+        }
+
+        $validators = array();
+        foreach ($sections as $section) {
+            $validators[] = $this->createValidatorsFromSection($section, $composer[$section]);
+        }
+
+        return call_user_func_array('array_merge', $validators);
+    }
+
+    /**
      * Create an validator.
      *
      * @param string $section     The section name where the autoload information originates from.
@@ -60,8 +84,8 @@ class AutoloadValidatorFactory
     public function createValidator($section, $type, $information)
     {
         $this->logger->debug(
-            'Creating {type} validator for {content}',
-            array('type' => $type, 'content' => var_export($information, true))
+            'Creating {name}.{type} validator with configuration {content}',
+            array('name' => $section, 'type' => $type, 'content' => $information)
         );
         switch ($type) {
             case ClassMapValidator::NAME:
@@ -99,5 +123,46 @@ class AutoloadValidatorFactory
             default:
                 throw new \InvalidArgumentException('Unknown auto loader type ' . $type . ' encountered!');
         }
+    }
+
+    /**
+     * Ensure that a composer autoload section is present.
+     *
+     * @param array $composer The composer json contents.
+     *
+     * @return string[]
+     */
+    private function getAutoloadSectionNames($composer)
+    {
+        $sections = array();
+
+        if (array_key_exists('autoload', $composer)) {
+            $sections[] = 'autoload';
+        }
+
+        if (array_key_exists('autoload-dev', $composer)) {
+            $sections[] = 'autoload-dev';
+        }
+
+        return $sections;
+    }
+
+    /**
+     * Create all validators for the passed section.
+     *
+     * @param string $sectionName The name of the autoload section (autoload or autoload-dev).
+     *
+     * @param array  $section     The autoload section from composer.json.
+     *
+     * @return AbstractValidator[]
+     */
+    private function createValidatorsFromSection($sectionName, $section)
+    {
+        $validators = array();
+        foreach ($section as $type => $content) {
+            $validators[] = $this->createValidator($sectionName, $type, $content);
+        }
+
+        return $validators;
     }
 }

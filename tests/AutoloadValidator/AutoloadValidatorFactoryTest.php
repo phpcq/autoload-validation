@@ -127,4 +127,39 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
 
         $factory->createValidator('autoload', '----unkown-----type---name----', array());
     }
+
+    /**
+     * Test that the factory returns an empty array when the composer.json data has no auto loader sections.
+     *
+     * @return void
+     */
+    public function testFactoryReturnsEmptyWhenNoSectionsGiven()
+    {
+        $factory = $this->mockFactory();
+
+        $this->assertEquals(array(), $factory->createFromComposerJson(array()));
+    }
+
+    /**
+     * Test that the factory returns an array containing validators from both sections.
+     *
+     * @return void
+     */
+    public function testFactoryReturnsValidatorsFromBothSections()
+    {
+        $factory = $this->mockFactory();
+
+        $validators = $factory->createFromComposerJson(
+            array(
+                'autoload' => array(
+                    'psr-0' => array('Vendor\\' => 'src')
+                ),
+                'autoload-dev' => array(
+                    'psr-4' => array('Vendor\\' => 'src')
+                ),
+            )
+        );
+
+        $this->assertCount(2, $validators);
+    }
 }
