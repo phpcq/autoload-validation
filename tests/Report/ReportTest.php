@@ -18,7 +18,7 @@
  * @filesource
  */
 
-namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
+namespace PhpCodeQuality\AutoloadValidation\Test\Report;
 
 use PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface;
 use PhpCodeQuality\AutoloadValidation\Report\Report;
