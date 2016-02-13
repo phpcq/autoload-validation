@@ -136,6 +136,9 @@ class AutoloadValidatorFactory
                     $this->generator,
                     $this->report
                 );
+            case 'exclude-from-classmap':
+                // No op
+                return null;
             default:
                 throw new \InvalidArgumentException('Unknown auto loader type ' . $type . ' encountered!');
         }
@@ -176,8 +179,9 @@ class AutoloadValidatorFactory
     {
         $validators = array();
         foreach ($section as $type => $content) {
-            $validator    = $this->createValidator($sectionName, $type, $content);
-            $validators[] = $validator;
+            if ($validator = $this->createValidator($sectionName, $type, $content)) {
+                $validators[] = $validator;
+            }
         }
 
         return $validators;
