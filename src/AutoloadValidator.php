@@ -21,10 +21,11 @@
 namespace PhpCodeQuality\AutoloadValidation;
 
 use Composer\Autoload\ClassLoader;
-use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ValidatorInterface;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
-use Psr\Log\LoggerInterface;
+use PhpCodeQuality\AutoloadValidation\Report\Report;
+use PhpCodeQuality\AutoloadValidation\Violation\ClassAddedMoreThanOnceViolation;
 
 /**
  * This class tests the autoload information.
@@ -34,32 +35,32 @@ class AutoloadValidator
     /**
      * The list of validators.
      *
-     * @var AbstractValidator[]
+     * @var ValidatorInterface[]
      */
     private $validators = array();
 
     /**
-     * The logger to use.
+     * The report to write to.
      *
-     * @var LoggerInterface
+     * @var Report
      */
-    private $logger;
+    private $report;
 
     /**
      * Create a new instance.
      *
-     * @param array           $validators The validators to use.
+     * @param array  $validators The validators to use.
      *
-     * @param LoggerInterface $logger     The logger to use.
+     * @param Report $report     The report to add to.
      *
      * @throws \InvalidArgumentException If any of the validators is not a validator.
      */
-    public function __construct($validators, LoggerInterface $logger)
+    public function __construct($validators, Report $report)
     {
-        $this->logger = $logger;
+        $this->report = $report;
 
         foreach ($validators as $validator) {
-            if (!($validator instanceof AbstractValidator)) {
+            if (!($validator instanceof ValidatorInterface)) {
                 throw new \InvalidArgumentException('Invalid validator: ' . get_class($validator));
             }
             $this->validators[] = $validator;
@@ -77,11 +78,6 @@ class AutoloadValidator
 
         foreach ($this->validators as $validator) {
             if ($validator->hasErrors()) {
-                $this->logger->error(
-                    'The {name} information in composer.json is incorrect!',
-                    array('name' => $validator->getName())
-                );
-
                 $result = false;
             }
         }
@@ -120,6 +116,7 @@ class AutoloadValidator
             foreach ($partialClassMap as $class => $file) {
                 try {
                     $classMap->add($class, $file);
+                    $duplicates[$class][$validatorName] = $file;
                 } catch (ClassAlreadyRegisteredException $exception) {
                     $duplicates[$class][$validatorName] = $file;
                 }
@@ -127,14 +124,15 @@ class AutoloadValidator
         }
 
         foreach ($duplicates as $class => $files) {
-            $autoloaders = array();
-            foreach ($files as $loader => $file) {
-                $autoloaders[] = $loader . ' ' . $file;
+            if (count($files) === 1) {
+                continue;
             }
-
-            $this->logger->error(
-                'The class {class} is available via multiple autoloader values:' . "\n" . '{autoloaders}',
-                array('class' => $class, 'autoloaders' => implode("\n", $autoloaders))
+            $this->report->error(
+                new ClassAddedMoreThanOnceViolation(
+                    implode(', ', array_keys($files)),
+                    $class,
+                    $files
+                )
             );
         }
 

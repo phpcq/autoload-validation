@@ -28,7 +28,7 @@ use Psr\Log\LoggerInterface;
 /**
  * This class is the abstract base for all validators.
  */
-abstract class AbstractValidator
+abstract class AbstractValidator implements ValidatorInterface
 {
     /**
      * The name of the validator.

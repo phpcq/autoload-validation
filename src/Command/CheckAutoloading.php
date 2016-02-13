@@ -25,6 +25,7 @@ use PhpCodeQuality\AutoloadValidation\AllLoadingAutoLoader;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory;
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
+use PhpCodeQuality\AutoloadValidation\Report\Destination\PsrLogDestination;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -70,10 +71,15 @@ class CheckAutoloading extends Command
             return 1;
         }
 
+        $destinations   = array();
+        $destinations[] = new PsrLogDestination($logger);
+
+        $report   = new Report($destinations);
         $composer = json_decode(file_get_contents($rootDir . '/composer.json'), true);
         $factory  = new AutoloadValidatorFactory($rootDir, new ClassMapGenerator(), $logger);
         $test     = new AutoloadValidator($factory->createFromComposerJson($composer), $logger);
         if (!$test->validate()) {
+        $test     = new AutoloadValidator($factory->createFromComposerJson($composer), $report);
             return 1;
         }
 
