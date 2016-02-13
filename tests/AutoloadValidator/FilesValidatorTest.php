@@ -43,7 +43,7 @@ class FilesValidatorTest extends ValidatorTestCase
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
-        $validator->logger = $this->mockLogger();
+
         $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator', $validator);
     }
 
@@ -61,7 +61,6 @@ class FilesValidatorTest extends ValidatorTestCase
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
-        $validator->logger = $this->mockLogger();
 
         $loader = $this->getMock('Composer\Autoload\ClassLoader');
         $loader->expects($this->never())->method($this->anything());
@@ -76,15 +75,6 @@ class FilesValidatorTest extends ValidatorTestCase
      */
     public function testScanDoesNotAddsErrorWhenFileFound()
     {
-        $logger = $this->mockLogger();
-        $logger->expects($this->never())->method('error')->with(
-            FilesValidator::ERROR_FILES_PATH_NOT_FOUND,
-            array(
-                'path' => __FILE__,
-                'name' => 'autoload.files',
-            )
-        );
-
         $validator = new FilesValidator(
             'autoload.files',
             array(basename(__FILE__)),
@@ -92,7 +82,6 @@ class FilesValidatorTest extends ValidatorTestCase
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
-        $validator->logger = $logger;
 
         $validator->validate();
     }
@@ -104,23 +93,19 @@ class FilesValidatorTest extends ValidatorTestCase
      */
     public function testScanAddsErrorWhenFileNotFound()
     {
-        $logger = $this->mockLogger();
-        $logger->expects($this->once())->method('error')->with(
-            FilesValidator::ERROR_FILES_PATH_NOT_FOUND,
-            array(
-                'path' => __DIR__ . '/does/not/exist',
-                'name' => 'autoload.files',
-            )
-        );
-
         $validator = new FilesValidator(
             'autoload.files',
             array('does/not/exist'),
             __DIR__,
             $this->mockClassMapGenerator(),
-            $this->mockReport()
+            $this->mockReport(
+                'PhpCodeQuality\AutoloadValidation\Violation\Files\FileNotFoundViolation',
+                array(
+                    'fileEntry'     => 'does/not/exist',
+                    'validatorName' => 'autoload.files'
+                )
+            )
         );
-        $validator->logger = $logger;
 
         $validator->validate();
     }

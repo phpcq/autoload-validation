@@ -21,22 +21,13 @@
 namespace PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 
 use Composer\Autoload\ClassLoader;
+use PhpCodeQuality\AutoloadValidation\Violation\Files\FileNotFoundViolation;
 
 /**
  * This class validates a "files" entry from composer "autoload" sections.
  */
 class FilesValidator extends AbstractValidator
 {
-    /**
-     * The name of the validator.
-     */
-    const NAME = 'files';
-
-    /**
-     * This error is shown when a path could not be found.
-     */
-    const ERROR_FILES_PATH_NOT_FOUND = '{name}: Path {path} could not be found.';
-
     /**
      * {@inheritDoc}
      */
@@ -56,7 +47,7 @@ class FilesValidator extends AbstractValidator
         foreach ($this->information as $path) {
             $subPath = str_replace('//', '/', $this->baseDir . '/' . $path);
             if (!realpath($subPath)) {
-                $this->error(static::ERROR_FILES_PATH_NOT_FOUND, array('path' => $subPath));
+                $this->report->error(new FileNotFoundViolation($this->getName(), $path));
             }
         }
     }
