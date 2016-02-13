@@ -59,12 +59,20 @@ class CheckAutoloading extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $rootDir  = realpath($input->getArgument('root-dir'));
-        $composer = json_decode(file_get_contents($rootDir . '/composer.json'), true);
-
+        $rootDir = realpath($input->getArgument('root-dir')) ?: getcwd();
         $logger  = new ConsoleLogger($output);
-        $factory = new AutoloadValidatorFactory($rootDir, new ClassMapGenerator(), $logger);
-        $test    = new AutoloadValidator($factory->createFromComposerJson($composer), $logger);
+
+        if (!file_exists($composerJson = $rootDir . '/composer.json')) {
+            $logger->error(
+                '<error>File not found, can not analyze: {file}</error> ',
+                array('file' => $composerJson)
+            );
+            return 1;
+        }
+
+        $composer = json_decode(file_get_contents($rootDir . '/composer.json'), true);
+        $factory  = new AutoloadValidatorFactory($rootDir, new ClassMapGenerator(), $logger);
+        $test     = new AutoloadValidator($factory->createFromComposerJson($composer), $logger);
         if (!$test->validate()) {
             return 1;
         }
