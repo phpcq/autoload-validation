@@ -21,17 +21,13 @@
 namespace PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 
 use Composer\Autoload\ClassLoader;
+use PhpCodeQuality\AutoloadValidation\Violation\ClassMap\NoClassesFoundInPathViolation;
 
 /**
- * This class validates a "class-map" entry from composer "autoload" sections.
+ * This class validates a "classmap" entry from composer "autoload" sections.
  */
 class ClassMapValidator extends AbstractValidator
 {
-    /**
-     * This error is shown when the class map entry did not find any classes.
-     */
-    const ERROR_CLASSMAP_NO_CLASSES_FOUND_FOR_PREFIX = '{name}: No classes found in classmap prefix {prefix}';
-
     /**
      * {@inheritDoc}
      */
@@ -53,7 +49,7 @@ class ClassMapValidator extends AbstractValidator
             $classMap = $this->classMapFromPath($subPath);
 
             if (empty($classMap)) {
-                $this->error(static::ERROR_CLASSMAP_NO_CLASSES_FOUND_FOR_PREFIX, array('prefix' => $subPath));
+                $this->report->error(new NoClassesFoundInPathViolation($this->getName(), $path));
             }
         }
     }

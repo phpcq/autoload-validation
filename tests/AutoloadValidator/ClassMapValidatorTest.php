@@ -42,7 +42,7 @@ class ClassMapValidatorTest extends ValidatorTestCase
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
-        $validator->logger = $this->mockLogger();
+
         $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator', $validator);
     }
 
@@ -65,7 +65,6 @@ class ClassMapValidatorTest extends ValidatorTestCase
             ),
             $this->mockReport()
         );
-        $validator->logger = $this->mockLogger();
 
         $loader = new ClassLoader();
 
@@ -87,15 +86,6 @@ class ClassMapValidatorTest extends ValidatorTestCase
      */
     public function testScanAddsErrorWhenNothingFound()
     {
-        $logger = $this->mockLogger();
-        $logger->expects($this->once())->method('error')->with(
-            ClassMapValidator::ERROR_CLASSMAP_NO_CLASSES_FOUND_FOR_PREFIX,
-            array(
-                'prefix'  => '/some/dir/src',
-                'name'   => 'autoload.classmap',
-            )
-        );
-
         $generator = $this->mockClassMapGenerator();
         $generator
             ->expects($this->once())
@@ -108,9 +98,14 @@ class ClassMapValidatorTest extends ValidatorTestCase
             array('/src'),
             '/some/dir',
             $generator,
-            $this->mockReport()
+            $this->mockReport(
+                'PhpCodeQuality\AutoloadValidation\Violation\ClassMap\NoClassesFoundInPathViolation',
+                array(
+                    'classMapPrefix' => '/src',
+                    'validatorName'  => 'autoload.classmap'
+                )
+            )
         );
-        $validator->logger = $logger;
 
         $validator->validate();
     }
@@ -122,9 +117,6 @@ class ClassMapValidatorTest extends ValidatorTestCase
      */
     public function testScansAllSubDirs()
     {
-        $logger = $this->mockLogger();
-        $logger->expects($this->never())->method('error');
-
         $generator = $this->mockClassMapGenerator();
         $generator->method('scan')
             ->withConsecutive(
@@ -146,7 +138,6 @@ class ClassMapValidatorTest extends ValidatorTestCase
             $generator,
             $this->mockReport()
         );
-        $validator->logger = $logger;
 
         $validator->validate();
 
