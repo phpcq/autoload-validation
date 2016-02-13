@@ -47,13 +47,6 @@ abstract class AbstractValidator implements ValidatorInterface
     protected $classMap;
 
     /**
-     * Flag if errors were detected.
-     *
-     * @var bool
-     */
-    protected $errored = false;
-
-    /**
      * The class map generator to use.
      *
      * @var ClassMapGenerator
@@ -136,18 +129,6 @@ abstract class AbstractValidator implements ValidatorInterface
         $this->validate();
 
         return $this->classMap;
-    }
-
-    /**
-     * Check if errors have been detected.
-     *
-     * @return bool
-     */
-    public function hasErrors()
-    {
-        $this->validate();
-
-        return $this->errored;
     }
 
     /**

@@ -107,7 +107,7 @@ class AutoloadValidatorTest extends \PHPUnit_Framework_TestCase
         );
 
         foreach ($validators as $validator) {
-            $validator->expects($this->once())->method('hasErrors');
+            $validator->expects($this->once())->method('validate');
         }
 
         $validator = new AutoloadValidator($validators, $report);

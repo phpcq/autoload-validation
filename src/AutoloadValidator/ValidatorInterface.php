@@ -28,15 +28,6 @@ use Composer\Autoload\ClassLoader;
 interface ValidatorInterface
 {
     /**
-     * Check if errors have been detected.
-     *
-     * @return bool
-     *
-     * @deprecated Will get removed when report is completely implemented.
-     */
-    public function hasErrors();
-
-    /**
      * Parse the autoload information.
      *
      * @return void

@@ -74,17 +74,6 @@ class AutoloadValidator
      */
     public function validate()
     {
-        // FIXME: REMOVE THIS!!!!
-        $result = true;
-
-        foreach ($this->validators as $validator) {
-            if ($validator->hasErrors()) {
-                $result = false;
-            }
-        }
-
-        return $result;
-
         foreach ($this->validators as $validator) {
             $validator->validate();
         }
