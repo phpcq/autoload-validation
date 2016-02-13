@@ -25,6 +25,7 @@ use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
 use PhpCodeQuality\AutoloadValidation\Report\Report;
 use PhpCodeQuality\AutoloadValidation\Violation\ClassAddedMoreThanOnceViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\GenericViolation;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -268,7 +269,7 @@ abstract class AbstractValidator implements ValidatorInterface
 
         if ($messages) {
             foreach ($messages as $message) {
-                $this->warning($message);
+                $this->report->warn(new GenericViolation($message));
             }
         }
 

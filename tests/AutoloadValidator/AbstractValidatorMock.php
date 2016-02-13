@@ -39,30 +39,6 @@ class AbstractValidatorMock extends AbstractValidator
     /**
      * {@inheritDoc}
      */
-    public function error($message, array $parameters = array())
-    {
-        parent::error($message, $parameters);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function warning($message, array $parameters = array())
-    {
-        parent::warning($message, $parameters);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function info($message, array $parameters = array())
-    {
-        parent::info($message, $parameters);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function addToLoader(ClassLoader $loader)
     {
         // No op.

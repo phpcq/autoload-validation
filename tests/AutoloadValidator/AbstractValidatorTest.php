@@ -21,7 +21,6 @@
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator;
-use PhpCodeQuality\AutoloadValidation\Report\Report;
 
 /**
  * This class tests the AbstractValidator.
@@ -44,7 +43,7 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
-        $validator->logger = $this->mockLogger();
+
         $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator', $validator);
         $this->assertInstanceOf(
             'PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap',
@@ -71,7 +70,6 @@ class AbstractValidatorTest extends ValidatorTestCase
                 $this->mockReport()
             )
         );
-        $validator->logger = $this->mockLogger();
 
         $validator->expects($this->once())->method('doValidate');
 
@@ -79,48 +77,6 @@ class AbstractValidatorTest extends ValidatorTestCase
 
         $validator->validate();
         $validator->getClassMap();
-    }
-
-    /**
-     * Test that the message logging works.
-     *
-     * @return void
-     */
-    public function testMessageLoggingWorks()
-    {
-        $logger = $this->mockLogger();
-
-        $logger
-            ->expects($this->once())
-            ->method('error')
-            ->with('{name} error {value}', array('value' => 'text', 'name' => 'autoload.validator-mock'));
-        $logger
-            ->expects($this->once())
-            ->method('warning')
-            ->with('{name} warning {value}', array('value' => 'text', 'name' => 'autoload.validator-mock'));
-        $logger
-            ->expects($this->once())
-            ->method('info')
-            ->with('{name} info {value}', array('value' => 'text', 'name' => 'autoload.validator-mock'));
-
-        $report = new Report(array());
-
-        $validator = new AbstractValidatorMock(
-            'autoload.validator-mock',
-            null,
-            '/some/dir',
-            $this->mockClassMapGenerator(),
-            $report
-        );
-        $validator->logger = $logger;
-
-        $validator->error('{name} error {value}', array('value' => 'text'));
-        $validator->warning('{name} warning {value}', array('value' => 'text'));
-        $validator->info('{name} info {value}', array('value' => 'text'));
-
-        $validator->validate();
-
-        $this->assertTrue($report->hasError());
     }
 
     /**
@@ -157,7 +113,6 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
-        $validator->logger = $this->mockLogger();
 
         $this->assertSame($expected, $validator->cutExtensionFromFileName($file));
     }
@@ -196,7 +151,6 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
-        $validator->logger = $this->mockLogger();
 
         $this->assertSame($expected, $validator->getExtensionFromFileName($file));
     }
@@ -234,7 +188,6 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
-        $validator->logger = $this->mockLogger();
 
         $this->assertSame($expected, $validator->getNameSpaceFromClassName($class));
     }
@@ -272,7 +225,6 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
-        $validator->logger = $this->mockLogger();
 
         $this->assertSame($expected, $validator->getClassFromClassName($class));
     }
@@ -286,11 +238,6 @@ class AbstractValidatorTest extends ValidatorTestCase
      */
     public function testClassMapGeneratingFromPathWorksWithEmptyResult()
     {
-        $logger = $this->mockLogger();
-        $logger->expects($this->never())->method('error');
-        $logger->expects($this->never())->method('warning');
-        $logger->expects($this->never())->method('info');
-
         $generator = $this->mockClassMapGenerator();
         $generator
             ->expects($this->once())
@@ -308,7 +255,6 @@ class AbstractValidatorTest extends ValidatorTestCase
             $generator,
             $this->mockReport('PhpCodeQuality\AutoloadValidation\Violation\GenericViolation')
         );
-        $validator->logger = $logger;
 
         $this->assertEmpty($validator->classMapFromPath('/some/dir/sub', 'Vendor\Namespace'));
         $this->assertTrue($validator->getClassMap()->isEmpty());
@@ -341,7 +287,6 @@ class AbstractValidatorTest extends ValidatorTestCase
             $generator,
             $this->mockReport()
         );
-        $validator->logger = $logger;
 
         $this->assertEquals($classMap, $validator->classMapFromPath('/some/dir/sub', 'Vendor\Namespace'));
         $resultingClassMap = $validator->getClassMap();
@@ -383,7 +328,6 @@ class AbstractValidatorTest extends ValidatorTestCase
                 )
             )
         );
-        $validator->logger = $logger;
 
         $resultingClassMap = $validator->getClassMap();
         $resultingClassMap->add('Vendor\Namespace\ClassName', '/some/dir/sub1/ClassName.php');
