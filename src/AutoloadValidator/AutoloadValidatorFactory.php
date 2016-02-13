@@ -48,6 +48,8 @@ class AutoloadValidatorFactory
      * @var LoggerInterface
      */
     private $logger;
+
+    /**
      * Create a new instance.
      *
      * @param string            $baseDir   The base dir.
