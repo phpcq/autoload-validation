@@ -117,14 +117,15 @@ class Psr0Validator extends AbstractValidator
             return;
         }
 
-        if ($prefix && '\\' !== substr($prefix, -1)) {
+        $classMap = $this->classMapFromPath($subPath, $prefix);
+
+        // All psr-0 namespace prefixes should end with \ unless they are an exact class name.
+        if ($prefix && '\\' !== substr($prefix, -1) && !isset($classMap[$prefix])) {
             $this->warning(
                 static::WARN_PSR0_NAMESPACE_SHOULD_END_WITH_BACKSLASH,
                 array('prefix' => $prefix)
             );
         }
-
-        $classMap = $this->classMapFromPath($subPath, $prefix);
 
         if (empty($classMap)) {
             $this->error(
