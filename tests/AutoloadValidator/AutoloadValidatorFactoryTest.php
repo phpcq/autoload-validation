@@ -21,10 +21,7 @@
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory;
-use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMapValidator;
-use PhpCodeQuality\AutoloadValidation\AutoloadValidator\FilesValidator;
-use PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr0Validator;
-use PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr4Validator;
+use PhpCodeQuality\AutoloadValidation\Report\Report;
 
 /**
  * This class tests the AutoloadValidatorFactory.
@@ -41,8 +38,9 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
         $factory = new AutoloadValidatorFactory(
             '/some/dir',
             $this->mockClassMapGenerator(),
-            $this->mockLogger()
+            new Report(array())
         );
+        $factory->logger = $this->mockLogger();
 
         $this->assertInstanceOf(
             'PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory',
@@ -63,7 +61,7 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
 
         $this->assertInstanceOf(
             'PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMapValidator',
-            $factory->createValidator('autoload', ClassMapValidator::NAME, array())
+            $factory->createValidator('autoload', 'classmap', array())
         );
     }
 
@@ -78,7 +76,7 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
 
         $this->assertInstanceOf(
             'PhpCodeQuality\AutoloadValidation\AutoloadValidator\FilesValidator',
-            $factory->createValidator('autoload', FilesValidator::NAME, array())
+            $factory->createValidator('autoload', 'files', array())
         );
     }
 
@@ -93,7 +91,7 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
 
         $this->assertInstanceOf(
             'PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr0Validator',
-            $factory->createValidator('autoload', Psr0Validator::NAME, array())
+            $factory->createValidator('autoload', 'psr-0', array())
         );
     }
 
@@ -108,7 +106,7 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
 
         $this->assertInstanceOf(
             'PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr4Validator',
-            $factory->createValidator('autoload', Psr4Validator::NAME, array())
+            $factory->createValidator('autoload', 'psr-4', array())
         );
     }
 

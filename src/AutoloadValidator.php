@@ -70,10 +70,11 @@ class AutoloadValidator
     /**
      * Loop over all validators and validate them.
      *
-     * @return bool
+     * @return void
      */
     public function validate()
     {
+        // FIXME: REMOVE THIS!!!!
         $result = true;
 
         foreach ($this->validators as $validator) {
@@ -83,6 +84,10 @@ class AutoloadValidator
         }
 
         return $result;
+
+        foreach ($this->validators as $validator) {
+            $validator->validate();
+        }
     }
 
     /**

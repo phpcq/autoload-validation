@@ -28,9 +28,6 @@ use Composer\Autoload\ClassLoader;
 class Psr0Validator extends AbstractValidator
 {
     /**
-     * The name of the validator.
-     */
-    const NAME = 'psr-0';
 
     /**
      * This error message is shown when the namespace portion of a psr-0 information is invalid.

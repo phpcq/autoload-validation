@@ -23,6 +23,8 @@ namespace PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 use Composer\Autoload\ClassLoader;
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
+use PhpCodeQuality\AutoloadValidation\Report\Report;
+use PhpCodeQuality\AutoloadValidation\Violation\ClassAddedMoreThanOnceViolation;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -30,16 +32,6 @@ use Psr\Log\LoggerInterface;
  */
 abstract class AbstractValidator implements ValidatorInterface
 {
-    /**
-     * The name of the validator.
-     */
-    const NAME = '??';
-
-    /**
-     * This error message is shown when the same class has been added from different files by this validator.
-     */
-    const ERROR_CLASS_ADDED_MORE_THAN_ONCE = '{name}: Class {class} is added more than once ({first} {second}).';
-
     /**
      * The base dir to operate on.
      *
@@ -79,8 +71,10 @@ abstract class AbstractValidator implements ValidatorInterface
      * The logger to use.
      *
      * @var LoggerInterface
+     *
+     * @deprecated
      */
-    protected $logger;
+    public $logger;
 
     /**
      * The name of the autoload section.
@@ -97,6 +91,13 @@ abstract class AbstractValidator implements ValidatorInterface
     private $validated = false;
 
     /**
+     * The report to generate.
+     *
+     * @var Report
+     */
+    protected $report;
+
+    /**
      * Create a new instance.
      *
      * @param string            $name        The name of the autoload section.
@@ -107,16 +108,16 @@ abstract class AbstractValidator implements ValidatorInterface
      *
      * @param ClassMapGenerator $generator   The class map generator to use.
      *
-     * @param LoggerInterface   $logger      The logger to use.
+     * @param Report            $report      The report to generate.
      */
-    public function __construct($name, $information, $baseDir, ClassMapGenerator $generator, LoggerInterface $logger)
+    public function __construct($name, $information, $baseDir, ClassMapGenerator $generator, Report $report)
     {
         $this->name        = $name;
         $this->information = $information;
         $this->baseDir     = $baseDir;
         $this->generator   = $generator;
         $this->classMap    = new ClassMap();
-        $this->logger      = $logger;
+        $this->report      = $report;
     }
 
     /**
@@ -185,12 +186,16 @@ abstract class AbstractValidator implements ValidatorInterface
      * @param array  $parameters The error parameters. NOTE: the parameter "name" will always be populated.
      *
      * @return void
+     *
+     * @deprecated
      */
     protected function error($message, array $parameters = array())
     {
-        $parameters['name'] = $this->name . '.' . static::NAME;
+        $parameters['name'] = $this->name;
 
-        $this->logger->error($message, $parameters);
+        if ($this->logger) {
+            $this->logger->error($message, $parameters);
+        }
 
         $this->errored = true;
     }
@@ -203,12 +208,16 @@ abstract class AbstractValidator implements ValidatorInterface
      * @param array  $parameters The error parameters. NOTE: the parameter "name" will always be populated.
      *
      * @return void
+     *
+     * @deprecated
      */
     protected function warning($message, array $parameters = array())
     {
-        $parameters['name'] = $this->name . '.' . static::NAME;
+        $parameters['name'] = $this->name;
 
-        $this->logger->warning($message, $parameters);
+        if ($this->logger) {
+            $this->logger->warning($message, $parameters);
+        }
     }
 
     /**
@@ -219,12 +228,16 @@ abstract class AbstractValidator implements ValidatorInterface
      * @param array  $parameters The error parameters. NOTE: the parameter "name" will always be populated.
      *
      * @return void
+     *
+     * @deprecated
      */
     protected function info($message, array $parameters = array())
     {
-        $parameters['name'] = $this->name . '.' . static::NAME;
+        $parameters['name'] = $this->name;
 
-        $this->logger->info($message, $parameters);
+        if ($this->logger) {
+            $this->logger->info($message, $parameters);
+        }
     }
 
     /**
@@ -263,12 +276,14 @@ abstract class AbstractValidator implements ValidatorInterface
             try {
                 $this->classMap->add($class, $file);
             } catch (ClassAlreadyRegisteredException $exception) {
-                $this->error(
-                    static::ERROR_CLASS_ADDED_MORE_THAN_ONCE,
-                    array(
-                        'class'  => $class,
-                        'first'  => $exception->getFileName(),
-                        'second' => $file
+                $this->report->append(
+                    new ClassAddedMoreThanOnceViolation(
+                        $this->getName(),
+                        $class,
+                        array(
+                            $exception->getFileName(),
+                            $file
+                        )
                     )
                 );
             }

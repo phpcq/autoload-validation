@@ -21,6 +21,8 @@
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
+use PhpCodeQuality\AutoloadValidation\Report\Report;
+use PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -57,6 +59,40 @@ class ValidatorTestCase extends \PHPUnit_Framework_TestCase
             ->getMock();
         if ($classMap) {
             $mock->method('scan')->willReturn($classMap);
+        }
+
+        return $mock;
+    }
+
+    /**
+     * Retrieve a mock of a report.
+     *
+     * @param string $expectedViolationClass The class name of the expected violation.
+     *
+     * @param string $expectedParameters     The expected parameters of the violation.
+     *
+     * @return \PHPUnit_Framework_MockObject_MockObject|Report
+     */
+    protected function mockReport($expectedViolationClass = '', $expectedParameters = array())
+    {
+        $that = $this;
+
+        $mock = $this
+            ->getMockBuilder('PhpCodeQuality\AutoloadValidation\Report\Report')
+            ->setMethods(array('append'))
+            ->disableOriginalConstructor()
+            ->getMock();
+        if ($expectedViolationClass) {
+            $mock->expects($this->once())->method('append')->willReturnCallback(
+                function (ViolationInterface $violation) use ($that, $expectedViolationClass, $expectedParameters) {
+                    $that->assertInstanceOf($expectedViolationClass, $violation);
+                    if (!empty($expectedParameters)) {
+                        $that->assertEquals($expectedParameters, $violation->getParameters());
+                    }
+                }
+            );
+        } else {
+            $mock->expects($this->never())->method('append');
         }
 
         return $mock;

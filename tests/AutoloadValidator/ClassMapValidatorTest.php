@@ -36,12 +36,13 @@ class ClassMapValidatorTest extends ValidatorTestCase
     public function testCreation()
     {
         $validator = new ClassMapValidator(
-            'autoload',
+            'autoload.classmap',
             array('/src'),
             '/some/dir',
             $this->mockClassMapGenerator(),
-            $this->mockLogger()
+            $this->mockReport()
         );
+        $validator->logger = $this->mockLogger();
         $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator', $validator);
     }
 
@@ -53,7 +54,7 @@ class ClassMapValidatorTest extends ValidatorTestCase
     public function testAddToLoader()
     {
         $validator = new ClassMapValidator(
-            'autoload',
+            'autoload.classmap',
             array('/src'),
             '/some/dir',
             $this->mockClassMapGenerator(
@@ -62,8 +63,9 @@ class ClassMapValidatorTest extends ValidatorTestCase
                     'Vendor\Namespace\ClassName2' => '/some/dir/another/dir/ClassName.php'
                 )
             ),
-            $this->mockLogger()
+            $this->mockReport()
         );
+        $validator->logger = $this->mockLogger();
 
         $loader = new ClassLoader();
 
@@ -102,12 +104,13 @@ class ClassMapValidatorTest extends ValidatorTestCase
             ->willReturn(array());
 
         $validator = new ClassMapValidator(
-            'autoload',
+            'autoload.classmap',
             array('/src'),
             '/some/dir',
             $generator,
-            $logger
+            $this->mockReport()
         );
+        $validator->logger = $logger;
 
         $validator->validate();
     }
@@ -134,15 +137,16 @@ class ClassMapValidatorTest extends ValidatorTestCase
             );
 
         $validator = new ClassMapValidator(
-            'autoload',
+            'autoload.classmap',
             array(
                 '/src',
                 '/another/dir'
             ),
             '/some/dir',
             $generator,
-            $logger
+            $this->mockReport()
         );
+        $validator->logger = $logger;
 
         $validator->validate();
 

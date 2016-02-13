@@ -28,11 +28,6 @@ use Composer\Autoload\ClassLoader;
 class Psr4Validator extends AbstractValidator
 {
     /**
-     * The name of the validator.
-     */
-    const NAME = 'psr-4';
-
-    /**
      * This error message is shown when the namespace portion of a psr-4 information is invalid.
      */
     const ERROR_PSR4_NAMESPACE_INVALID = '{name}: Invalid namespace value "{prefix}" found for prefix "{path}"';

@@ -43,8 +43,10 @@ class Psr4ValidatorTest extends ValidatorTestCase
             ),
             '/some/dir',
             $this->mockClassMapGenerator(),
-            $this->mockLogger()
+            $this->mockReport()
         );
+        $validator->logger = $this->mockLogger();
+
         $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator', $validator);
     }
 
@@ -56,15 +58,16 @@ class Psr4ValidatorTest extends ValidatorTestCase
     public function testAddToLoader()
     {
         $validator = new Psr4Validator(
-            'autoload',
+            'autoload.psr-4',
             array(
                 'AVendor\\' => 'src/',
                 'Vendor\\Namespace\\' => ''
             ),
             '/some/dir',
             $this->mockClassMapGenerator(),
-            $this->mockLogger()
+            $this->mockReport()
         );
+        $validator->logger = $this->mockLogger();
 
         $loader = new ClassLoader();
 
@@ -102,12 +105,13 @@ class Psr4ValidatorTest extends ValidatorTestCase
             ->method('scan');
 
         $validator = new Psr4Validator(
-            'autoload',
+            'autoload.psr-4',
             array(0 => '/src'),
             '/some/dir',
             $generator,
-            $logger
+            $this->mockReport()
         );
+        $validator->logger = $logger;
 
         $validator->validate();
     }
@@ -134,12 +138,13 @@ class Psr4ValidatorTest extends ValidatorTestCase
             ->method('scan');
 
         $validator = new Psr4Validator(
-            'autoload',
+            'autoload.psr-4',
             array('Vendor\\Prefix' => '/src'),
             '/some/dir',
             $generator,
-            $logger
+            $this->mockReport()
         );
+        $validator->logger = $logger;
 
         $validator->validate();
     }
@@ -169,12 +174,13 @@ class Psr4ValidatorTest extends ValidatorTestCase
             ->willReturn(array());
 
         $validator = new Psr4Validator(
-            'autoload',
+            'autoload.psr-4',
             array('Vendor\\' => 'src/'),
             '/some/dir',
             $generator,
-            $logger
+            $this->mockReport()
         );
+        $validator->logger = $logger;
 
         $validator->validate();
     }
@@ -201,15 +207,16 @@ class Psr4ValidatorTest extends ValidatorTestCase
             );
 
         $validator = new Psr4Validator(
-            'autoload',
+            'autoload.psr-4',
             array(
                 'Vendor\\A\\' => 'src',
                 'Vendor\\B\\' => 'another/dir'
             ),
             '/some/dir',
             $generator,
-            $logger
+            $this->mockReport()
         );
+        $validator->logger = $logger;
 
         $validator->validate();
     }
@@ -346,7 +353,8 @@ class Psr4ValidatorTest extends ValidatorTestCase
             ->method('scan')
             ->willReturn($classMap);
 
-        $validator = new Psr4Validator('autoload', $content, '/', $generator, $logger);
+        $validator = new Psr4Validator('autoload.psr-4', $content, '/', $generator, $this->mockReport());
+        $validator->logger = $logger;
 
         $validator->validate();
     }

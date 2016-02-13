@@ -28,11 +28,6 @@ use Composer\Autoload\ClassLoader;
 class ClassMapValidator extends AbstractValidator
 {
     /**
-     * The name of the validator.
-     */
-    const NAME = 'classmap';
-
-    /**
      * This error is shown when the class map entry did not find any classes.
      */
     const ERROR_CLASSMAP_NO_CLASSES_FOUND_FOR_PREFIX = '{name}: No classes found in classmap prefix {prefix}';

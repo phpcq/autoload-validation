@@ -37,12 +37,13 @@ class FilesValidatorTest extends ValidatorTestCase
     public function testCreation()
     {
         $validator = new FilesValidator(
-            'autoload',
+            'autoload.files',
             array('/src'),
             '/some/dir',
             $this->mockClassMapGenerator(),
-            $this->mockLogger()
+            $this->mockReport()
         );
+        $validator->logger = $this->mockLogger();
         $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator', $validator);
     }
 
@@ -54,12 +55,13 @@ class FilesValidatorTest extends ValidatorTestCase
     public function testAddToLoader()
     {
         $validator = new FilesValidator(
-            'autoload',
+            'autoload.files',
             array(basename(__FILE__)),
             __DIR__,
             $this->mockClassMapGenerator(),
-            $this->mockLogger()
+            $this->mockReport()
         );
+        $validator->logger = $this->mockLogger();
 
         $loader = $this->getMock('Composer\Autoload\ClassLoader');
         $loader->expects($this->never())->method($this->anything());
@@ -84,12 +86,13 @@ class FilesValidatorTest extends ValidatorTestCase
         );
 
         $validator = new FilesValidator(
-            'autoload',
+            'autoload.files',
             array(basename(__FILE__)),
             __DIR__,
             $this->mockClassMapGenerator(),
-            $logger
+            $this->mockReport()
         );
+        $validator->logger = $logger;
 
         $validator->validate();
     }
@@ -111,12 +114,13 @@ class FilesValidatorTest extends ValidatorTestCase
         );
 
         $validator = new FilesValidator(
-            'autoload',
+            'autoload.files',
             array('does/not/exist'),
             __DIR__,
             $this->mockClassMapGenerator(),
-            $logger
+            $this->mockReport()
         );
+        $validator->logger = $logger;
 
         $validator->validate();
     }

@@ -21,6 +21,7 @@
 namespace PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
+use PhpCodeQuality\AutoloadValidation\Report\Report;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -47,7 +48,14 @@ class AutoloadValidatorFactory
      *
      * @var LoggerInterface
      */
-    private $logger;
+    public $logger;
+
+    /**
+     * The report to generate.
+     *
+     * @var Report
+     */
+    private $report;
 
     /**
      * Create a new instance.
@@ -56,13 +64,13 @@ class AutoloadValidatorFactory
      *
      * @param ClassMapGenerator $generator The class map generator to use.
      *
-     * @param LoggerInterface   $logger    The logger to use.
+     * @param Report            $report    The report to generate.
      */
-    public function __construct($baseDir, ClassMapGenerator $generator, LoggerInterface $logger)
+    public function __construct($baseDir, ClassMapGenerator $generator, Report $report)
     {
         $this->baseDir   = $baseDir;
         $this->generator = $generator;
-        $this->logger    = $logger;
+        $this->report    = $report;
     }
 
     /**
@@ -109,37 +117,37 @@ class AutoloadValidatorFactory
             array('name' => $section, 'type' => $type, 'content' => $information)
         );
         switch ($type) {
-            case ClassMapValidator::NAME:
+            case 'classmap':
                 return new ClassMapValidator(
-                    $section,
+                    $section . '.' . $type,
                     $information,
                     $this->baseDir,
                     $this->generator,
-                    $this->logger
+                    $this->report
                 );
-            case FilesValidator::NAME:
+            case 'files':
                 return new FilesValidator(
-                    $section,
+                    $section . '.' . $type,
                     $information,
                     $this->baseDir,
                     $this->generator,
-                    $this->logger
+                    $this->report
                 );
-            case Psr0Validator::NAME:
+            case 'psr-0':
                 return new Psr0Validator(
-                    $section,
+                    $section . '.' . $type,
                     $information,
                     $this->baseDir,
                     $this->generator,
-                    $this->logger
+                    $this->report
                 );
-            case Psr4Validator::NAME:
+            case 'psr-4':
                 return new Psr4Validator(
-                    $section,
+                    $section . '.' . $type,
                     $information,
                     $this->baseDir,
                     $this->generator,
-                    $this->logger
+                    $this->report
                 );
             default:
                 throw new \InvalidArgumentException('Unknown auto loader type ' . $type . ' encountered!');
@@ -181,7 +189,10 @@ class AutoloadValidatorFactory
     {
         $validators = array();
         foreach ($section as $type => $content) {
-            $validators[] = $this->createValidator($sectionName, $type, $content);
+            $validator = $this->createValidator($sectionName, $type, $content);
+            $validator->logger = $this->logger;
+
+            $validators[] = $validator;
         }
 
         return $validators;

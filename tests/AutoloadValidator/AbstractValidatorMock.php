@@ -29,11 +29,6 @@ use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator;
 class AbstractValidatorMock extends AbstractValidator
 {
     /**
-     * The name of the validator.
-     */
-    const NAME = 'validator-mock';
-
-    /**
      * {@inheritDoc}
      */
     protected function doValidate()
