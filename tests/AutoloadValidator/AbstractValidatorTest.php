@@ -267,11 +267,6 @@ class AbstractValidatorTest extends ValidatorTestCase
      */
     public function testClassMapGeneratingFromPathWorksWithNonEmptyResult()
     {
-        $logger = $this->mockLogger();
-        $logger->expects($this->never())->method('error');
-        $logger->expects($this->never())->method('warning');
-        $logger->expects($this->never())->method('info');
-
         $classMap = array('Vendor\Namespace\ClassName' => '/some/dir/sub/ClassName.php');
 
         $generator = $this->mockClassMapGenerator($classMap);
@@ -301,11 +296,6 @@ class AbstractValidatorTest extends ValidatorTestCase
      */
     public function testClassMapGeneratingFromPathWorksWithNonEmptyResultAndLogsDuplicates()
     {
-        $logger = $this->mockLogger();
-        $logger->expects($this->never())->method('error');
-        $logger->expects($this->never())->method('warning');
-        $logger->expects($this->never())->method('info');
-
         $classMap = array('Vendor\Namespace\ClassName' => '/some/dir/sub2/ClassName.php');
 
         $generator = $this->mockClassMapGenerator($classMap);
