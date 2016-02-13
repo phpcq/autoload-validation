@@ -64,7 +64,7 @@ class CheckAutoloading extends Command
 
         $logger  = new ConsoleLogger($output);
         $factory = new AutoloadValidatorFactory($rootDir, new ClassMapGenerator(), $logger);
-        $test    = new AutoloadValidator($composer, $factory, $logger);
+        $test    = new AutoloadValidator($factory->createFromComposerJson($composer), $logger);
         if (!$test->validate()) {
             return 1;
         }
