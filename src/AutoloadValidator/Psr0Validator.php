@@ -21,51 +21,17 @@
 namespace PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 
 use Composer\Autoload\ClassLoader;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr0\ClassFoundInWrongFileViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr0\NameSpaceInvalidViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr0\NamespacePrefixMismatchViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr0\NamespaceShouldEndWithBackslashViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr0\NoClassesFoundInPathViolation;
 
 /**
  * This class validates a "psr-0" entry from composer "autoload" sections.
  */
 class Psr0Validator extends AbstractValidator
 {
-    /**
-
-    /**
-     * This error message is shown when the namespace portion of a psr-0 information is invalid.
-     */
-    const ERROR_PSR0_NAMESPACE_INVALID = '{name}: Invalid namespace value "{prefix}" found for prefix "{path}"';
-
-    /**
-     * Namespace declarations should end in \\ to make sure the autoloader responds exactly.
-     *
-     * For example Foo would match in FooBar so the trailing backslashes solve the problem:
-     * Foo\\ and FooBar\\ are distinct.
-     */
-    const WARN_PSR0_NAMESPACE_SHOULD_END_WITH_BACKSLASH =
-        '{name}: Namespace declaration "{prefix}" should end in "\\\\" to make sure the auto loader responds exactly.';
-
-    /**
-     * This error message is shown when a psr-0 information does not contain any classes.
-     */
-    const ERROR_PSR0_NO_CLASSES_FOUND_IN_PATH = '{name}: No classes found for psr-0 {prefix} prefix {path}';
-
-    /**
-     * This error message is shown when the namespace of a class does not match the expected psr-0 prefix.
-     */
-    const ERROR_PSR0_DETECTED_DOES_NOT_MATCH_EXPECTED_NAMESPACE =
-        '{name}: Class {class} namespace {detected} does not match psr-0 prefix {namespace} for directory {directory}!';
-
-    /**
-     * This error is shown when a class name is used as psr-0 prefix.
-     */
-    const ERROR_PSR0_CLASS_USED_AS_PSR0_PREFIX =
-        '{name}: Class {class} is used as psr-0 namespace prefix {prefix} for directory {directory}!';
-
-    /**
-     * This error is shown when a class has been found in the wrong file.
-     */
-    const ERROR_PSR0_CLASS_FOUND_IN_WRONG_FILE =
-        "{name}: (psr-0 Prefix {prefix})\n Found class: {class} \n in file:    {file-is}\n should be:  {file-should}";
-
     /**
      * {@inheritDoc}
      */
@@ -106,9 +72,12 @@ class Psr0Validator extends AbstractValidator
     {
         $subPath = str_replace('//', '/', $this->baseDir . '/' . $path);
         if (is_numeric($prefix)) {
-            $this->error(
-                static::ERROR_PSR0_NAMESPACE_INVALID,
-                array('prefix' => $prefix, 'path' => $subPath)
+            $this->report->error(
+                new NameSpaceInvalidViolation(
+                    $this->getName(),
+                    $prefix,
+                    $subPath
+                )
             );
 
             return;
@@ -116,18 +85,24 @@ class Psr0Validator extends AbstractValidator
 
         $classMap = $this->classMapFromPath($subPath, $prefix);
 
-        // All psr-0 namespace prefixes should end with \ unless they are an exact class name.
-        if ($prefix && '\\' !== substr($prefix, -1) && !isset($classMap[$prefix])) {
-            $this->warning(
-                static::WARN_PSR0_NAMESPACE_SHOULD_END_WITH_BACKSLASH,
-                array('prefix' => $prefix)
+        // All psr-0 namespace prefixes should end with \ unless they are an exact class name or pear style.
+        if ($prefix
+            && (false !== strpos($prefix, '\\'))
+            && !in_array(substr($prefix, -1), array('\\', '_'))
+            && !isset($classMap[$prefix])
+        ) {
+            $this->report->warn(
+                new NamespaceShouldEndWithBackslashViolation(
+                    $this->getName(),
+                    $prefix,
+                    $subPath
+                )
             );
         }
 
         if (empty($classMap)) {
-            $this->error(
-                static::ERROR_PSR0_NO_CLASSES_FOUND_IN_PATH,
-                array('prefix' => $prefix, 'path' => $subPath)
+            $this->report->error(
+                new NoClassesFoundInPathViolation($this->getName(), $prefix, $subPath)
             );
 
             return;
@@ -162,33 +137,22 @@ class Psr0Validator extends AbstractValidator
             $classNs = $this->getNameSpaceFromClassName($class);
             $classNm = $this->getClassFromClassName($class);
 
-            if ($class === $prefix) {
-                /*
-                Why was this here? It is legal to specify an exact class as psr-0, according to the specs.
-                $this->error(
-                    static::ERROR_PSR0_CLASS_USED_AS_PSR0_PREFIX,
-                    array(
-                        'class'     => $class,
-                        'prefix'    => $prefix,
-                        'directory' => $subPath
-                    )
-                );
-                */
-
-                continue;
-            }
-
             // PEAR-like class name or namespace does not match.
             if ($this->checkPearOrNoMatch($classNs, $prefixLength, $cleaned)) {
-                $this->error(
-                    static::ERROR_PSR0_DETECTED_DOES_NOT_MATCH_EXPECTED_NAMESPACE,
-                    array(
-                        'class'     => $class,
-                        'detected'  => $this->getNameSpaceFromClassName($class),
-                        'prefix'    => $prefix,
-                        'directory' => $subPath
+                // It is allowed to specify a class name as prefix.
+                if ($class === $prefix) {
+                    continue;
+                }
+                $this->report->error(
+                    new NamespacePrefixMismatchViolation(
+                        $this->getName(),
+                        $class,
+                        $prefix,
+                        $this->getNameSpaceFromClassName($class),
+                        $subPath
                     )
                 );
+
                 continue;
             }
 
@@ -201,13 +165,13 @@ class Psr0Validator extends AbstractValidator
             $fileNameShould .= str_replace('_', DIRECTORY_SEPARATOR, $classNm);
 
             if ($fileNameShould !== $this->cutExtensionFromFileName($file)) {
-                $this->error(
-                    static::ERROR_PSR0_CLASS_FOUND_IN_WRONG_FILE,
-                    array(
-                        'class' => $class,
-                        'file-is' => $file,
-                        'file-should' => $fileNameShould . $this->getExtensionFromFileName($file),
-                        'prefix' => $prefix,
+                $this->report->error(
+                    new ClassFoundInWrongFileViolation(
+                        $this->getName(),
+                        $class,
+                        $file,
+                        $fileNameShould . $this->getExtensionFromFileName($file),
+                        $prefix
                     )
                 );
             }
