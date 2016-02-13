@@ -40,7 +40,6 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
             $this->mockClassMapGenerator(),
             new Report(array())
         );
-        $factory->logger = $this->mockLogger();
 
         $this->assertInstanceOf(
             'PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory',

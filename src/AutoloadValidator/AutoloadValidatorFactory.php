@@ -22,7 +22,6 @@ namespace PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
 use PhpCodeQuality\AutoloadValidation\Report\Report;
-use Psr\Log\LoggerInterface;
 
 /**
  * This class creates validators based upon the configuration data.
@@ -42,13 +41,6 @@ class AutoloadValidatorFactory
      * @var ClassMapGenerator
      */
     private $generator;
-
-    /**
-     * The logger to use.
-     *
-     * @var LoggerInterface
-     */
-    public $logger;
 
     /**
      * The report to generate.
@@ -85,7 +77,6 @@ class AutoloadValidatorFactory
         $sections = $this->getAutoloadSectionNames($composer);
 
         if (empty($sections)) {
-            $this->logger->info('No autoload information found, skipping test.');
             return array();
         }
 
@@ -112,10 +103,6 @@ class AutoloadValidatorFactory
      */
     public function createValidator($section, $type, $information)
     {
-        $this->logger->debug(
-            'Creating {name}.{type} validator with configuration {content}',
-            array('name' => $section, 'type' => $type, 'content' => $information)
-        );
         switch ($type) {
             case 'classmap':
                 return new ClassMapValidator(
@@ -189,9 +176,7 @@ class AutoloadValidatorFactory
     {
         $validators = array();
         foreach ($section as $type => $content) {
-            $validator = $this->createValidator($sectionName, $type, $content);
-            $validator->logger = $this->logger;
-
+            $validator    = $this->createValidator($sectionName, $type, $content);
             $validators[] = $validator;
         }
 

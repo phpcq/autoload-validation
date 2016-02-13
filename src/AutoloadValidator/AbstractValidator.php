@@ -26,7 +26,6 @@ use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
 use PhpCodeQuality\AutoloadValidation\Report\Report;
 use PhpCodeQuality\AutoloadValidation\Violation\ClassAddedMoreThanOnceViolation;
 use PhpCodeQuality\AutoloadValidation\Violation\GenericViolation;
-use Psr\Log\LoggerInterface;
 
 /**
  * This class is the abstract base for all validators.
@@ -67,15 +66,6 @@ abstract class AbstractValidator implements ValidatorInterface
      * @var mixed
      */
     protected $information;
-
-    /**
-     * The logger to use.
-     *
-     * @var LoggerInterface
-     *
-     * @deprecated
-     */
-    public $logger;
 
     /**
      * The name of the autoload section.
@@ -178,68 +168,6 @@ abstract class AbstractValidator implements ValidatorInterface
      * @return void
      */
     abstract public function addToLoader(ClassLoader $loader);
-
-    /**
-     * Errors.
-     *
-     * @param string $message    The message to add.
-     *
-     * @param array  $parameters The error parameters. NOTE: the parameter "name" will always be populated.
-     *
-     * @return void
-     *
-     * @deprecated
-     */
-    protected function error($message, array $parameters = array())
-    {
-        $parameters['name'] = $this->name;
-
-        if ($this->logger) {
-            $this->logger->error($message, $parameters);
-        }
-
-        $this->errored = true;
-    }
-
-    /**
-     * Exceptional occurrences that are not errors.
-     *
-     * @param string $message    The message to add.
-     *
-     * @param array  $parameters The error parameters. NOTE: the parameter "name" will always be populated.
-     *
-     * @return void
-     *
-     * @deprecated
-     */
-    protected function warning($message, array $parameters = array())
-    {
-        $parameters['name'] = $this->name;
-
-        if ($this->logger) {
-            $this->logger->warning($message, $parameters);
-        }
-    }
-
-    /**
-     * Interesting events.
-     *
-     * @param string $message    The message to add.
-     *
-     * @param array  $parameters The error parameters. NOTE: the parameter "name" will always be populated.
-     *
-     * @return void
-     *
-     * @deprecated
-     */
-    protected function info($message, array $parameters = array())
-    {
-        $parameters['name'] = $this->name;
-
-        if ($this->logger) {
-            $this->logger->info($message, $parameters);
-        }
-    }
 
     /**
      * Prepend the passed path with the base dir.

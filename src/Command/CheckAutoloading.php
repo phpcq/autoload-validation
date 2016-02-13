@@ -78,7 +78,6 @@ class CheckAutoloading extends Command
         $report   = new Report($destinations);
         $composer = json_decode(file_get_contents($rootDir . '/composer.json'), true);
         $factory  = new AutoloadValidatorFactory($rootDir, new ClassMapGenerator(), $report);
-        $factory->logger = $logger;
         $test     = new AutoloadValidator($factory->createFromComposerJson($composer), $report);
         if (!$test->validate()) {
             return 1;

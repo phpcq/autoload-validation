@@ -23,7 +23,6 @@ namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
 use PhpCodeQuality\AutoloadValidation\Report\Report;
 use PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * This class is the base test case for testing validators.
@@ -32,18 +31,6 @@ use Psr\Log\LoggerInterface;
  */
 class ValidatorTestCase extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * Create a mocked logger.
-     *
-     * @return \PHPUnit_Framework_MockObject_MockObject|LoggerInterface
-     */
-    protected function mockLogger()
-    {
-        return $this
-            ->getMockBuilder('Psr\Log\LoggerInterface')
-            ->getMockForAbstractClass();
-    }
-
     /**
      * Mock a class map generator.
      *
@@ -69,7 +56,7 @@ class ValidatorTestCase extends \PHPUnit_Framework_TestCase
      *
      * @param string $expectedViolationClass The class name of the expected violation.
      *
-     * @param string $expectedParameters     The expected parameters of the violation.
+     * @param array  $expectedParameters     The expected parameters of the violation.
      *
      * @return \PHPUnit_Framework_MockObject_MockObject|Report
      */
