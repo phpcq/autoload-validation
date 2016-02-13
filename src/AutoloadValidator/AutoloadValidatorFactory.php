@@ -29,6 +29,25 @@ use Psr\Log\LoggerInterface;
 class AutoloadValidatorFactory
 {
     /**
+     * The basedir to operate on.
+     *
+     * @var string
+     */
+    private $baseDir;
+
+    /**
+     * The class map generator to use.
+     *
+     * @var ClassMapGenerator
+     */
+    private $generator;
+
+    /**
+     * The logger to use.
+     *
+     * @var LoggerInterface
+     */
+    private $logger;
      * Create a new instance.
      *
      * @param string            $baseDir   The base dir.
