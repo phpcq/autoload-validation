@@ -110,6 +110,16 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
     }
 
     /**
+     * Test that the factory creates a Psr4Validator.
+     *
+     * @return void
+     */
+    public function testExcludeFromClassmapSkippedInCreation()
+    {
+        $this->assertEmpty($this->mockFactory()->createValidator('autoload', 'exclude-from-classmap', array()));
+    }
+
+    /**
      * Test that the factory throws an exception for unknown type names.
      *
      * @return void
