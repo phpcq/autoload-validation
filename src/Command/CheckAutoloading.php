@@ -46,6 +46,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 class CheckAutoloading extends Command
 {
     /**
+     * The exit code map.
+     *
+     * @var array
+     */
+    private static $exitCodes = array(
+        false => 1,
+        true => 0
+    );
+
+    /**
      * {@inheritDoc}
      */
     protected function configure()
@@ -86,18 +96,25 @@ EOF
     }
 
     /**
-     * {@inheritDoc}
+     * Execute the tests.
+     *
+     * @param InputInterface  $input  An InputInterface instance.
+     * @param OutputInterface $output An OutputInterface instance.
+     *
+     * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $rootDir = realpath($input->getArgument('root-dir')) ?: getcwd();
         $logger  = new ConsoleLogger($output);
 
-        if (!file_exists($composerJson = $rootDir . '/composer.json')) {
+        $composerJson = $rootDir . '/composer.json';
+        if (!file_exists($composerJson)) {
             $logger->error(
                 '<error>File not found, can not analyze: {file}</error> ',
                 array('file' => $composerJson)
             );
+
             return 1;
         }
 
@@ -122,7 +139,7 @@ EOF
 
         $loadCycle = new AllLoadingAutoLoader($enumLoader, $test->getClassMap(), $logger);
 
-        return $loadCycle->run() ? 0 : 1;
+        return static::$exitCodes[$loadCycle->run() && !$report->hasError()];
     }
 
     /**
