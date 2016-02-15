@@ -107,6 +107,34 @@ class ClassMapTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that the class map can be manipulated.
+     *
+     * @return void
+     */
+    public function testClassMapCanRemoveClasses()
+    {
+        $classMap = new ClassMap();
+        $classMap->add('Some\Class', '/some/path');
+
+        $this->assertSame($classMap, $classMap->remove('Some\Class'));
+        $this->assertFalse($classMap->has('Some\Class'));
+        $this->assertTrue($classMap->isEmpty());
+    }
+
+    /**
+     * Test that the class map throws an exception when an unregistered class shall get removed.
+     *
+     * @return void
+     *
+     * @expectedException \InvalidArgumentException
+     */
+    public function testClassMapThrowsExceptionForRemovingUnregistered()
+    {
+        $classMap = new ClassMap();
+        $classMap->remove('Some\Class');
+    }
+
+    /**
      * Test that the class map throws an exception when a class file is retrieved for an unregistered class.
      *
      * @return void

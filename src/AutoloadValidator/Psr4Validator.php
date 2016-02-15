@@ -114,6 +114,7 @@ class Psr4Validator extends AbstractValidator
             }
 
             if (substr($class, 0, $prefixLength) !== $prefix) {
+                $this->classMap->remove($class);
                 $this->report->error(
                     new NamespacePrefixMismatchViolation(
                         $this->getName(),
@@ -138,6 +139,7 @@ class Psr4Validator extends AbstractValidator
             );
 
             if ($fileNameShould !== $this->cutExtensionFromFileName($file)) {
+                $this->classMap->remove($class);
                 $this->report->error(
                     new ClassFoundInWrongFileViolation(
                         $this->getName(),

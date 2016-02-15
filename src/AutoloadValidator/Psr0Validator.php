@@ -143,6 +143,7 @@ class Psr0Validator extends AbstractValidator
                 if ($class === $prefix) {
                     continue;
                 }
+                $this->classMap->remove($class);
                 $this->report->error(
                     new NamespacePrefixMismatchViolation(
                         $this->getName(),
@@ -165,6 +166,7 @@ class Psr0Validator extends AbstractValidator
             $fileNameShould .= str_replace('_', DIRECTORY_SEPARATOR, $classNm);
 
             if ($fileNameShould !== $this->cutExtensionFromFileName($file)) {
+                $this->classMap->remove($class);
                 $this->report->error(
                     new ClassFoundInWrongFileViolation(
                         $this->getName(),

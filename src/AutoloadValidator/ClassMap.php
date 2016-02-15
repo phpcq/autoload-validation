@@ -83,6 +83,28 @@ class ClassMap implements \IteratorAggregate
     }
 
     /**
+     * Remove a class from the map.
+     *
+     * @param string $class The name of the class to remove.
+     *
+     * @return ClassMap
+     *
+     * @throws \InvalidArgumentException When the passed class has not been registered.
+     */
+    public function remove($class)
+    {
+        $class = $this->normalizeClassName($class);
+
+        if (!$this->has($class)) {
+            throw new \InvalidArgumentException('Class ' . $class . ' is not registered.');
+        }
+
+        unset($this->classes[$class]);
+
+        return $this;
+    }
+
+    /**
      * Obtain the file the class resides in.
      *
      * @param string $class The class name.
