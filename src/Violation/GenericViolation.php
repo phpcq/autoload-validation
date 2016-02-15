@@ -23,7 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation\Violation;
 /**
  * This violation is a generic base type.
  */
-class GenericViolation implements ViolationInterface
+class GenericViolation extends AbstractViolation
 {
     /**
      * The message.
@@ -40,26 +40,16 @@ class GenericViolation implements ViolationInterface
     private $parameters;
 
     /**
-     * The text representation.
-     *
-     * @var string
-     */
-    private $text;
-
-    /**
      * Create a new instance.
      *
      * @param string $message    The message to use.
      *
      * @param array  $parameters The parameters to use.
-     *
-     * @param string $text       The text result (if null, $message will get used).
      */
-    public function __construct($message, array $parameters = array(), $text = null)
+    public function __construct($message, array $parameters = array())
     {
         $this->message    = $message;
         $this->parameters = $parameters;
-        $this->text       = $text ?: $message;
     }
 
     /**
@@ -76,13 +66,5 @@ class GenericViolation implements ViolationInterface
     public function getMessage()
     {
         return $this->message;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function text()
-    {
-        return $this->text;
     }
 }
