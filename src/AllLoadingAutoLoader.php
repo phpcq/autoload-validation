@@ -20,8 +20,9 @@
 
 namespace PhpCodeQuality\AutoloadValidation;
 
-use Composer\Autoload\ClassLoader;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
+use PhpCodeQuality\AutoloadValidation\ClassLoader\EnumeratingClassLoader;
+use PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException;
 use PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException;
 use Psr\Log\LoggerInterface;
 
@@ -40,7 +41,7 @@ class AllLoadingAutoLoader
     /**
      * The class loader.
      *
-     * @var ClassLoader
+     * @var EnumeratingClassLoader
      */
     private $loader;
 
@@ -52,24 +53,15 @@ class AllLoadingAutoLoader
     private $logger;
 
     /**
-     * The autoload function hack.
-     *
-     * This closure will throw an \ParentClassNotFoundException when invoked, so we will not get a fatal error.
-     *
-     * @var \Closure
-     */
-    private $parentClassNotFoundHack;
-
-    /**
      * Create a new instance.
      *
-     * @param ClassLoader     $loader   The class loader.
+     * @param EnumeratingClassLoader $loader   The class loader.
      *
-     * @param ClassMap        $classMap The class map.
+     * @param ClassMap               $classMap The class map.
      *
-     * @param LoggerInterface $logger   The logger.
+     * @param LoggerInterface        $logger   The logger.
      */
-    public function __construct(ClassLoader $loader, ClassMap $classMap, LoggerInterface $logger)
+    public function __construct(EnumeratingClassLoader $loader, ClassMap $classMap, LoggerInterface $logger)
     {
         $this->loader   = $loader;
         $this->classMap = iterator_to_array($classMap);
@@ -83,21 +75,76 @@ class AllLoadingAutoLoader
      */
     public function run()
     {
-        $this->registerFallback();
-        $result = true;
+        $this->loader->register();
+        $result   = true;
+        $classMap = array_slice($this->classMap, 0);
 
         // Now try to autoload all classes.
-        foreach ($this->classMap as $class => $file) {
-            $result = $this->tryLoadClass($class, $file) && $result;
+        while ($classMap) {
+            $file  = reset($classMap);
+            $class = key($classMap);
+            try {
+                $result = $this->tryLoadClass($class, $file) && $result;
+            } catch (ParentClassNotFoundException $exception) {
+                $this->handleParentClassNotFound($exception, $classMap);
+
+                continue;
+            }
+
+            unset($classMap[$class]);
             $this->logger->info(
                 'Loaded {class}.',
                 array('class' => $class, 'file' => $file)
             );
         }
 
-        $this->unRegisterFallback();
+        $this->loader->unregister();
 
         return $result;
+    }
+
+    /**
+     * Handle the parent class not found exceptions an log the parent class hierarchy.
+     *
+     * @param ParentClassNotFoundException $exception The exception to handle.
+     *
+     * @param array                        $classMap  The class map to manipulate.
+     *
+     * @return void
+     */
+    private function handleParentClassNotFound(ParentClassNotFoundException $exception, &$classMap)
+    {
+        // Now collect all parent classes and display them then.
+        $classes = array();
+        while ($exception) {
+            $parentClass = $exception->getParentClass();
+            $classes[]   = $parentClass;
+            $exception   = $exception->getPrevious();
+
+            unset($classMap[$parentClass]);
+        }
+        $classes     = array_reverse($classes);
+        $parentClass = array_shift($classes);
+        // Check if the parent class is known in the class map.
+        if (isset($this->classMap[$parentClass])) {
+            // It is known, nothing we can do anymore. Next one.
+            $this->logger->error(
+                'Could not load class.' . "\n" .
+                'class:  {class}' . "\n" .
+                'file:   {file}',
+                array('class' => $parentClass, 'parent' => $this->classMap[$parentClass])
+            );
+        }
+        $logLine = '{class0}(!!!!)';
+        $args    = array('class0' => $parentClass);
+        // Ok, top most parent is somewhere lost, log this incident.
+        foreach ($classes as $class) {
+            $parName        = sprintf('class%1$d', count($args));
+            $logLine       .= sprintf(' <= {%1$s}', $parName);
+            $args[$parName] = $class;
+        }
+
+        $this->logger->warning($logLine, $args);
     }
 
     /**
@@ -120,24 +167,24 @@ class AllLoadingAutoLoader
         );
 
         try {
-            if (!$this->loader->loadClass($className)) {
-                $this->logger->error(
-                    'The autoloader could not load {class} (should be located in file {file}).',
-                    array('class' => $className, 'file' => $file)
+            $this->loader->loadClass($className);
+            if (!$this->loader->isClassFromFile($className, $file)) {
+                $this->logger->warning(
+                    '{class} was loaded from {realFile} (should be located in file {file}).',
+                    array(
+                        'class' => $className,
+                        'file' => $file,
+                        'realFile' => $this->loader->getFileDeclaringClass($className)
+                    )
                 );
-
-                return false;
             }
 
             return true;
-        } catch (ParentClassNotFoundException $exception) {
-            $this->logger->notice(
-                'Loading class {class} incomplete due to missing parent class: {parent}.',
-                array('class' => $className, 'parent' => $exception->getParentClass())
+        } catch (ClassNotFoundException $exception) {
+            $this->logger->error(
+                'The autoloader could not load {class} (should be located in file {file}).',
+                array('class' => $className, 'file' => $file)
             );
-
-            // We consider this non fatal.
-            return true;
         } catch (\ErrorException $exception) {
             $this->logger->error(
                 'Loading class {class}  failed with reason: {error}.',
@@ -160,42 +207,5 @@ class AllLoadingAutoLoader
         return (class_exists($className, false)
             || interface_exists($className, false)
             || (function_exists('trait_exists') && trait_exists($className, false)));
-    }
-
-    /**
-     * Register the class loader hack.
-     *
-     * @return void
-     *
-     * @throws ParentClassNotFoundException In the auto loader closure being registered.
-     */
-    private function registerFallback()
-    {
-        $that = $this;
-
-        $this->parentClassNotFoundHack = function ($class) use ($that) {
-            if (isset($that->classMap[$class]) && $that->tryLoadClass($class, $that->classMap[$class])) {
-                if ($that->isLoaded($class)) {
-                    return true;
-                }
-            }
-
-            throw new ParentClassNotFoundException($class);
-        };
-
-        // Important! Add to the end of auto loaders, do NOT prepend.
-        spl_autoload_register($this->parentClassNotFoundHack);
-    }
-
-    /**
-     * Unregister the class loader hack.
-     *
-     * @return void
-     */
-    private function unRegisterFallback()
-    {
-        spl_autoload_unregister($this->parentClassNotFoundHack);
-
-        unset($this->parentClassNotFoundHack);
     }
 }

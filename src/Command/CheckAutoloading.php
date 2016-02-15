@@ -21,9 +21,11 @@
 
 namespace PhpCodeQuality\AutoloadValidation\Command;
 
+use Composer\Autoload\ClassLoader;
 use PhpCodeQuality\AutoloadValidation\AllLoadingAutoLoader;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory;
+use PhpCodeQuality\AutoloadValidation\ClassLoader\EnumeratingClassLoader;
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
 use PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface;
 use PhpCodeQuality\AutoloadValidation\Report\Destination\PsrLogDestination;
@@ -50,7 +52,19 @@ class CheckAutoloading extends Command
     {
         $this
             ->setName('phpcq:check-autoloading')
-            ->setDescription('Check that the composer.json autoloading keys are correct.')
+            ->setDescription(<<<EOF
+Check that the composer.json auto loading keys are correct.
+This command has support for:
+- psr-0 scanning
+- psr-4 scanning
+- classmap scanning
+
+Note that by default the legacy hacks for Contao auto loader is still on, if you do not want this pass the
+<comment>--disable-legacy-hacks (-d)</comment> option. This behaviour will get removed in Version 2.0.
+
+However, a warning will get shown if the Contao auto loader is used without forcing it to be so.
+EOF
+            )
             ->addArgument(
                 'root-dir',
                 InputArgument::OPTIONAL,
@@ -62,6 +76,12 @@ class CheckAutoloading extends Command
                 's',
                 InputOption::VALUE_NONE,
                 'Perform strict validations. This converts discovered warnings to errors'
+            )
+            ->addOption(
+                'disable-legacy-hacks',
+                'd',
+                InputOption::VALUE_NONE,
+                'Path this to disable the now deprecated auto loader hacks of Version 1.0 to probe for Contao classes.'
             );
     }
 
@@ -93,7 +113,14 @@ class CheckAutoloading extends Command
             $logger->error('<error>Testing loaders found errors</error> ');
         }
 
-        $loadCycle = new AllLoadingAutoLoader($test->getLoader(), $test->getClassMap(), $logger);
+        $enumLoader = new EnumeratingClassLoader();
+        $this->prepareLoader($enumLoader, $test);
+        $this->prepareComposerFallbackLoader($enumLoader, $rootDir, $composer);
+        if (!$input->getOption('disable-legacy-hacks')) {
+            $this->prepareLegacyHacks($enumLoader, $logger);
+        }
+
+        $loadCycle = new AllLoadingAutoLoader($enumLoader, $test->getClassMap(), $logger);
 
         return $loadCycle->run() ? 0 : 1;
     }
@@ -124,5 +151,107 @@ class CheckAutoloading extends Command
         $report = new Report($destinations, $reportMap);
 
         return $report;
+    }
+
+    /**
+     * Create a class loader that contains the classes found by us and the classes from the real composer installation.
+     *
+     * @param EnumeratingClassLoader $enumLoader        The enum loader to add to.
+     *
+     * @param AutoloadValidator      $autoloadValidator The auto loader validator.
+     *
+     * @return void
+     */
+    private function prepareLoader(EnumeratingClassLoader $enumLoader, AutoloadValidator $autoloadValidator)
+    {
+        $loaders = $autoloadValidator->getLoaders();
+        foreach ($loaders as $name => $loader) {
+            $enumLoader->add($loader, $name);
+        }
+    }
+
+    /**
+     * Create a class loader that contains the legacy hack and add it to the enum loader.
+     *
+     * @param EnumeratingClassLoader $enumLoader The enum loader to add to.
+     *
+     * @param LoggerInterface        $logger     The logger to pass warnings to.
+     *
+     * @return void
+     */
+    private function prepareLegacyHacks(EnumeratingClassLoader $enumLoader, LoggerInterface $logger)
+    {
+        // Add Contao hack.
+        $enumLoader->add(function ($class) use ($logger) {
+            if (substr($class, 0, 7) !== 'Contao\\') {
+                spl_autoload_call('Contao\\' . $class);
+                if (class_exists('Contao\\' . $class, false) && !class_exists($class, false)) {
+                    class_alias('Contao\\' . $class, $class);
+
+                    $logger->warning(
+                        'Loaded class {class} as {alias} from deprecated Contao hack. ' .
+                        'Please specify a custom loader hack if you want to keep this class loaded.',
+                        array('class' => 'Contao\\' . $class, 'alias' => $class)
+                    );
+
+                    return true;
+                }
+            }
+
+            return null;
+        }, 'contao.hack');
+    }
+
+    /**
+     * Prepare the composer fallback loader.
+     *
+     * @param EnumeratingClassLoader $enumLoader The enum loader to add to.
+     *
+     * @param string                 $baseDir    The base dir where the composer.json resides.
+     *
+     * @param array                  $composer   The contents of the composer.json.
+     *
+     * @return void
+     */
+    private function prepareComposerFallbackLoader(EnumeratingClassLoader $enumLoader, $baseDir, $composer)
+    {
+        $vendorDir = $baseDir . DIRECTORY_SEPARATOR . 'vendor';
+        if (isset($composer['extra']['vendor-dir'])) {
+            $vendorDir = $baseDir . DIRECTORY_SEPARATOR . $composer['extra']['vendor-dir'];
+        }
+
+        if (!is_dir($vendorDir)) {
+            return;
+        }
+        $loader = new ClassLoader();
+
+        if ($map = $this->includeIfExists($vendorDir . '/composer/autoload_namespaces.php')) {
+            foreach ($map as $namespace => $path) {
+                $loader->set($namespace, $path);
+            }
+        }
+
+        if ($map = $this->includeIfExists($vendorDir . '/composer/autoload_psr4.php')) {
+            foreach ($map as $namespace => $path) {
+                $loader->setPsr4($namespace, $path);
+            }
+        }
+        if ($classMap = $this->includeIfExists($vendorDir . '/composer/autoload_classmap.php')) {
+            $loader->addClassMap($classMap);
+        }
+
+        $enumLoader->add(array($loader, 'loadClass'), 'composer.fallback');
+    }
+
+    /**
+     * Include the given file if it exists and return the result.
+     *
+     * @param string $file The file name.
+     *
+     * @return bool|array
+     */
+    private function includeIfExists($file)
+    {
+        return file_exists($file) ? include $file : false;
     }
 }
