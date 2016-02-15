@@ -82,7 +82,7 @@ class AutoloadValidator
     /**
      * Retrieve the populated loaders.
      *
-     * @return ClassLoader[]
+     * @return callable[]
      */
     public function getLoaders()
     {
