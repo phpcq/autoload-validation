@@ -94,7 +94,7 @@ class EnumeratingClassLoader
      *
      * @return bool
      */
-    public function isLoaded($className)
+    public static function isLoaded($className)
     {
         return (class_exists($className, false)
             || interface_exists($className, false)

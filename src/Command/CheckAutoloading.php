@@ -27,6 +27,7 @@ use PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory;
 use PhpCodeQuality\AutoloadValidation\ClassLoader\EnumeratingClassLoader;
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
+use PhpCodeQuality\AutoloadValidation\Hacks\HackPreparator;
 use PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface;
 use PhpCodeQuality\AutoloadValidation\Report\Destination\PsrLogDestination;
 use PhpCodeQuality\AutoloadValidation\Report\Report;
@@ -88,6 +89,14 @@ EOF
                 'Perform strict validations. This converts discovered warnings to errors'
             )
             ->addOption(
+                'add-autoloader',
+                null,
+                (InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY),
+                'Path to an auto loader PHP include file to probe when testing class loading.' . "\r\n" .
+                'Files passed will get included at the beginning.'  . "\r\n" .
+                'This allows to support cumbersome third party auto loaders.'
+            )
+            ->addOption(
                 'disable-legacy-hacks',
                 'd',
                 InputOption::VALUE_NONE,
@@ -105,7 +114,11 @@ EOF
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $rootDir = realpath($input->getArgument('root-dir')) ?: getcwd();
+        if ($root = $input->getArgument('root-dir')) {
+            chdir(realpath($root));
+        }
+
+        $rootDir = realpath(getcwd());
         $logger  = new ConsoleLogger($output);
 
         $composerJson = $rootDir . '/composer.json';
@@ -132,9 +145,20 @@ EOF
 
         $enumLoader = new EnumeratingClassLoader();
         $this->prepareLoader($enumLoader, $test);
+
+        $hacker = new HackPreparator($enumLoader, $logger);
+        if ($custom = $input->getOption('add-autoloader')) {
+            $hacker->prepareHacks(
+                $custom,
+                array(
+                    $rootDir,
+                    dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'hacks'
+                )
+            );
+        }
         $this->prepareComposerFallbackLoader($enumLoader, $rootDir, $composer);
-        if (!$input->getOption('disable-legacy-hacks')) {
-            $this->prepareLegacyHacks($enumLoader, $logger);
+        if (!($input->getOption('disable-legacy-hacks') || $input->getOption('add-autoloader'))) {
+            $hacker->prepareLegacyHack();
         }
 
         $loadCycle = new AllLoadingAutoLoader($enumLoader, $test->getClassMap(), $logger);
@@ -185,38 +209,6 @@ EOF
         foreach ($loaders as $name => $loader) {
             $enumLoader->add($loader, $name);
         }
-    }
-
-    /**
-     * Create a class loader that contains the legacy hack and add it to the enum loader.
-     *
-     * @param EnumeratingClassLoader $enumLoader The enum loader to add to.
-     *
-     * @param LoggerInterface        $logger     The logger to pass warnings to.
-     *
-     * @return void
-     */
-    private function prepareLegacyHacks(EnumeratingClassLoader $enumLoader, LoggerInterface $logger)
-    {
-        // Add Contao hack.
-        $enumLoader->add(function ($class) use ($logger) {
-            if (substr($class, 0, 7) !== 'Contao\\') {
-                spl_autoload_call('Contao\\' . $class);
-                if (class_exists('Contao\\' . $class, false) && !class_exists($class, false)) {
-                    class_alias('Contao\\' . $class, $class);
-
-                    $logger->warning(
-                        'Loaded class {class} as {alias} from deprecated Contao hack. ' .
-                        'Please specify a custom loader hack if you want to keep this class loaded.',
-                        array('class' => 'Contao\\' . $class, 'alias' => $class)
-                    );
-
-                    return true;
-                }
-            }
-
-            return null;
-        }, 'contao.hack');
     }
 
     /**
