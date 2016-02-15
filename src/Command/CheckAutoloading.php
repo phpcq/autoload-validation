@@ -110,7 +110,7 @@ class CheckAutoloading extends Command
     private function prepareReport(InputInterface $input, LoggerInterface $logger)
     {
         $reportMap = array();
-        if ($input->hasOption('strict')) {
+        if ($input->getOption('strict')) {
             $reportMap = array(
                 DestinationInterface::SEVERITY_ERROR   => DestinationInterface::SEVERITY_ERROR,
                 DestinationInterface::SEVERITY_WARNING => DestinationInterface::SEVERITY_ERROR,
