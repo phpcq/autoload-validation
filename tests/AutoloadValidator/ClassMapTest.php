@@ -95,6 +95,18 @@ class ClassMapTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that class names are normalized.
+     *
+     * @return void
+     */
+    public function testClassMapNormalizesClassNames()
+    {
+        $classMap = new ClassMap();
+        $classMap->add('\Some\Class', '/some/path');
+        $this->assertTrue($classMap->has('Some\Class'));
+    }
+
+    /**
      * Test that the class map throws an exception when a class file is retrieved for an unregistered class.
      *
      * @return void

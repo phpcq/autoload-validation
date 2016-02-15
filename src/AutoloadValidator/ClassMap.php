@@ -53,7 +53,7 @@ class ClassMap implements \IteratorAggregate
      */
     public function has($class)
     {
-        return array_key_exists($class, $this->classes);
+        return array_key_exists($this->normalizeClassName($class), $this->classes);
     }
 
     /**
@@ -69,6 +69,8 @@ class ClassMap implements \IteratorAggregate
      */
     public function add($class, $file)
     {
+        $class = $this->normalizeClassName($class);
+
         if ($this->has($class)) {
             if (($localFile = $this->getFileFor($class)) !== $file) {
                 throw new ClassAlreadyRegisteredException($class, $localFile);
@@ -91,6 +93,8 @@ class ClassMap implements \IteratorAggregate
      */
     public function getFileFor($class)
     {
+        $class = $this->normalizeClassName($class);
+
         if (!$this->has($class)) {
             throw new \InvalidArgumentException('Class ' . $class . ' is not registered.');
         }
@@ -106,5 +110,21 @@ class ClassMap implements \IteratorAggregate
     public function getIterator()
     {
         return new \ArrayIterator($this->classes);
+    }
+
+    /**
+     * Normalize a class name (cut leading backslash).
+     *
+     * @param string $className The class name to normalize.
+     *
+     * @return string
+     */
+    private function normalizeClassName($className)
+    {
+        if ('\\' === $className[0]) {
+            return substr($className, 1);
+        }
+
+        return $className;
     }
 }
