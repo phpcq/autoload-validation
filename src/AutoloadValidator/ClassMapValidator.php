@@ -45,7 +45,7 @@ class ClassMapValidator extends AbstractValidator
     {
         // Scan all directories mentioned and validate the class map against the entries.
         foreach ($this->information as $path) {
-            $subPath  = str_replace('//', '/', $this->baseDir . '/' . $path);
+            $subPath  = $this->prependPathWithBaseDir($path);
             $classMap = $this->classMapFromPath($subPath);
 
             if (empty($classMap)) {

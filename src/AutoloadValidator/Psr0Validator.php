@@ -70,7 +70,7 @@ class Psr0Validator extends AbstractValidator
      */
     private function doValidatePath($prefix, $path)
     {
-        $subPath = str_replace('//', '/', $this->baseDir . '/' . $path);
+        $subPath = $this->prependPathWithBaseDir($path);
         if (is_numeric($prefix)) {
             $this->report->error(
                 new NameSpaceInvalidViolation(

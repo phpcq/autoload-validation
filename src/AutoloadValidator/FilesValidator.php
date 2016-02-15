@@ -45,7 +45,7 @@ class FilesValidator extends AbstractValidator
     {
         // Scan all directories mentioned and validate the class map against the entries.
         foreach ($this->information as $path) {
-            $subPath = str_replace('//', '/', $this->baseDir . '/' . $path);
+            $subPath = $this->prependPathWithBaseDir($path);
             if (!realpath($subPath)) {
                 $this->report->error(new FileNotFoundViolation($this->getName(), $path));
             }
