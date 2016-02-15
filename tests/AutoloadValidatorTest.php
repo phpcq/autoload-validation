@@ -115,7 +115,7 @@ class AutoloadValidatorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that getLoader() calls all sub validators.
+     * Test that getLoaders() calls all sub validators.
      *
      * @return void
      */
@@ -132,12 +132,18 @@ class AutoloadValidatorTest extends \PHPUnit_Framework_TestCase
             $this->getMockValidator(),
         );
 
-        foreach ($validators as $validator) {
-            $validator->expects($this->once())->method('addToLoader');
+        foreach ($validators as $key => $validator) {
+            $validator->expects($this->once())->method('getLoader')->willReturn('autoload-fn.' . $key);
+            $validator->method('getName')->willReturn('loader.' . $key);
         }
 
         $validator = new AutoloadValidator($validators, $report);
-        $this->assertInstanceOf('Composer\Autoload\ClassLoader', $validator->getLoader());
+
+        $loaders = $validator->getLoaders();
+        $this->assertEquals(array('loader.0', 'loader.1', 'loader.2'), array_keys($loaders));
+        $this->assertEquals('autoload-fn.0', $loaders['loader.0']);
+        $this->assertEquals('autoload-fn.1', $loaders['loader.1']);
+        $this->assertEquals('autoload-fn.2', $loaders['loader.2']);
     }
 
     /**

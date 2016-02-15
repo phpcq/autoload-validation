@@ -20,7 +20,6 @@
 
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
-use Composer\Autoload\ClassLoader;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMapValidator;
 
 /**
@@ -66,16 +65,15 @@ class ClassMapValidatorTest extends ValidatorTestCase
             $this->mockReport()
         );
 
-        $loader = new ClassLoader();
 
-        $validator->addToLoader($loader);
-
+        $loader = $validator->getLoader();
+        $this->assertInstanceOf('Composer\Autoload\ClassLoader', $loader[0]);
         $this->assertEquals(
             array(
                 'Vendor\Namespace\ClassName1' => '/some/dir/src/ClassName1.php',
                 'Vendor\Namespace\ClassName2' => '/some/dir/another/dir/ClassName.php'
             ),
-            $loader->getClassMap()
+            $loader[0]->getClassMap()
         );
     }
 

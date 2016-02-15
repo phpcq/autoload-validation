@@ -31,9 +31,12 @@ class ClassMapValidator extends AbstractValidator
     /**
      * {@inheritDoc}
      */
-    public function addToLoader(ClassLoader $loader)
+    public function getLoader()
     {
+        $loader = new ClassLoader();
         $loader->addClassMap(iterator_to_array($this->getClassMap()));
+
+        return array($loader, 'loadClass');
     }
 
     /**

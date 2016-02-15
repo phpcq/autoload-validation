@@ -80,18 +80,18 @@ class AutoloadValidator
     }
 
     /**
-     * Retrieve the populated loader.
+     * Retrieve the populated loaders.
      *
-     * @return ClassLoader
+     * @return ClassLoader[]
      */
-    public function getLoader()
+    public function getLoaders()
     {
-        $loader = new ClassLoader();
+        $loaders = array();
         foreach ($this->validators as $validator) {
-            $validator->addToLoader($loader);
+            $loaders[$validator->getName()] = $validator->getLoader();
         }
 
-        return $loader;
+        return $loaders;
     }
 
     /**

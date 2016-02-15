@@ -51,9 +51,7 @@ interface ValidatorInterface
     /**
      * Add the auto loading to the passed loader.
      *
-     * @param ClassLoader $loader The loader to add to.
-     *
-     * @return void
+     * @return callable
      */
-    public function addToLoader(ClassLoader $loader);
+    public function getLoader();
 }

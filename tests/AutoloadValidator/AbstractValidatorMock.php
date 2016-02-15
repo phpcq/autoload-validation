@@ -39,7 +39,7 @@ class AbstractValidatorMock extends AbstractValidator
     /**
      * {@inheritDoc}
      */
-    public function addToLoader(ClassLoader $loader)
+    public function getLoader()
     {
         // No op.
     }

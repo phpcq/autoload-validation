@@ -20,7 +20,6 @@
 
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
-use Composer\Autoload\ClassLoader;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr0Validator;
 
 /**
@@ -68,16 +67,15 @@ class Psr0ValidatorTest extends ValidatorTestCase
             $this->mockReport()
         );
 
-        $loader = new ClassLoader();
+        $loader = $validator->getLoader();
 
-        $validator->addToLoader($loader);
-
+        $this->assertInstanceOf('Composer\Autoload\ClassLoader', $loader[0]);
         $this->assertEquals(
             array(
                 'Vendor\\A\\' => array('/some/dir/src'),
                 'Vendor\\B\\' => array('/some/dir/another/dir')
             ),
-            $loader->getPrefixes()
+            $loader[0]->getPrefixes()
         );
     }
 

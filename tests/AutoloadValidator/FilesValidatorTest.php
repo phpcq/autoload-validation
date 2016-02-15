@@ -54,18 +54,19 @@ class FilesValidatorTest extends ValidatorTestCase
      */
     public function testAddToLoader()
     {
+        $fixture = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'files_loader.php';
+
         $validator = new FilesValidator(
             'autoload.files',
-            array(basename(__FILE__)),
-            __DIR__,
+            array(basename($fixture)),
+            dirname($fixture),
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
 
-        $loader = $this->getMock('Composer\Autoload\ClassLoader');
-        $loader->expects($this->never())->method($this->anything());
+        $loaders = $validator->getLoader();
 
-        $validator->addToLoader($loader);
+        $this->assertInstanceOf('Closure', $loaders);
     }
 
     /**

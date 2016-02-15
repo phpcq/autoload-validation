@@ -144,11 +144,9 @@ abstract class AbstractValidator implements ValidatorInterface
     /**
      * Add the auto loading to the passed loader.
      *
-     * @param ClassLoader $loader The loader to add to.
-     *
-     * @return void
+     * @return callable
      */
-    abstract public function addToLoader(ClassLoader $loader);
+    abstract public function getLoader();
 
     /**
      * Prepend the passed path with the base dir.

@@ -35,14 +35,18 @@ class Psr0Validator extends AbstractValidator
     /**
      * {@inheritDoc}
      */
-    public function addToLoader(ClassLoader $loader)
+    public function getLoader()
     {
+        $loader = new ClassLoader();
+
         foreach ($this->information as $prefix => $paths) {
             $loader->add(
                 $prefix,
                 array_map(array($this, 'prependPathWithBaseDir'), (array) $paths)
             );
         }
+
+        return array($loader, 'loadClass');
     }
 
     /**

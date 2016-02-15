@@ -20,7 +20,6 @@
 
 namespace PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 
-use Composer\Autoload\ClassLoader;
 use PhpCodeQuality\AutoloadValidation\Violation\Files\FileNotFoundViolation;
 
 /**
@@ -31,11 +30,34 @@ class FilesValidator extends AbstractValidator
     /**
      * {@inheritDoc}
      */
-    public function addToLoader(ClassLoader $loader)
+    public function getLoader()
     {
         $this->validate();
 
+        $previous = spl_autoload_functions();
+
+        foreach ($this->information as $path) {
+            if ($path = realpath($this->prependPathWithBaseDir($path))) {
+                require $path;
+            }
+        }
+
+        $found = array();
+        $after = spl_autoload_functions();
+        foreach ($after as $loader) {
+            if (!in_array($loader, $previous)) {
+                spl_autoload_unregister($loader);
+                $found[] = $loader;
+            }
+        }
+
         // No op.
+        return function ($class) use ($found) {
+            foreach ($found as $loader) {
+                // FIXME: add try catching here?
+                $loader($class);
+            }
+        };
     }
 
     /**
