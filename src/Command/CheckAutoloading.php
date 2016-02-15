@@ -90,8 +90,7 @@ class CheckAutoloading extends Command
         $test     = new AutoloadValidator($factory->createFromComposerJson($composer), $report);
         $test->validate();
         if ($report->hasError()) {
-            $logger->error('<error>Test loading of classes prevented due to previous errors</error> ');
-            return 1;
+            $logger->error('<error>Testing loaders found errors</error> ');
         }
 
         $loadCycle = new AllLoadingAutoLoader($test->getLoader(), $test->getClassMap(), $logger);
