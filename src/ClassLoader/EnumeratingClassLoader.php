@@ -44,7 +44,7 @@ class EnumeratingClassLoader
      *
      * @var string
      */
-    private $loading;
+    private $loading = null;
 
     /**
      * The list of previously registered loaders.
@@ -66,12 +66,15 @@ class EnumeratingClassLoader
      */
     public function loadClass($class)
     {
-        if (!isset($this->loading)) {
+        if (empty($this->loading)) {
             $this->loading = $class;
         }
         try {
             foreach ($this->loaders as $name => $loader) {
                 if ($loader($class)) {
+                    if ($class === $this->loading) {
+                        $this->loading = null;
+                    }
                     return $name;
                 }
             }
@@ -79,10 +82,10 @@ class EnumeratingClassLoader
             throw new ParentClassNotFoundException($class, 0, $exception);
         }
         if ($class !== $this->loading) {
-            unset($this->loading);
+            $this->loading = null;
             throw new ParentClassNotFoundException($class);
         }
-        unset($this->loading);
+        $this->loading = null;
 
         throw new ClassNotFoundException($class);
     }
