@@ -135,7 +135,7 @@ class AllLoadingAutoLoader
                 array('class' => $parentClass, 'parent' => $this->classMap[$parentClass])
             );
         }
-        $logLine = '{class0}(!!!!)';
+        $logLine = '{class0}<Missing parent class!>';
         $args    = array('class0' => $parentClass);
         // Ok, top most parent is somewhere lost, log this incident.
         foreach ($classes as $class) {
