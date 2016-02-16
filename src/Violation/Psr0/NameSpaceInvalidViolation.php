@@ -31,26 +31,4 @@ class NameSpaceInvalidViolation extends Psr0ValidatorViolation
     const MESSAGE = <<<EOF
 {validatorName}: Invalid namespace value "{psr0Prefix}" found for path "{path}"
 EOF;
-
-    /**
-     * The specified path.
-     *
-     * @var string
-     */
-    protected $path;
-
-    /**
-     * Create a new instance.
-     *
-     * @param string $validatorName The name of the originating validator.
-     *
-     * @param string $psr0Prefix    The specified namespace.
-     *
-     * @param string $path          The specified path.
-     */
-    public function __construct($validatorName, $psr0Prefix, $path)
-    {
-        parent::__construct($validatorName, $psr0Prefix);
-        $this->path = $path;
-    }
 }

@@ -35,15 +35,25 @@ abstract class Psr0ValidatorViolation extends ValidatorViolation
     protected $psr0Prefix;
 
     /**
+     * The path for the prefix.
+     *
+     * @var string[]
+     */
+    protected $path;
+
+    /**
      * Create a new instance.
      *
      * @param string $validatorName The name of the originating validator.
      *
      * @param string $psr0Prefix    The specified psr-0 namespace prefix.
+     *
+     * @param string $path          The specified path for the prefix.
      */
-    public function __construct($validatorName, $psr0Prefix)
+    public function __construct($validatorName, $psr0Prefix, $path)
     {
         parent::__construct($validatorName);
         $this->psr0Prefix = $psr0Prefix;
+        $this->path       = $path;
     }
 }

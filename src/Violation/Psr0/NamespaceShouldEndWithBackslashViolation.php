@@ -36,26 +36,4 @@ class NamespaceShouldEndWithBackslashViolation extends Psr0ValidatorViolation
 For example "Foo" would match in "FooBar" so add trailing backslash to solve the problem:
 "Foo\\" and "FooBar\\" are distinct.
 EOF;
-
-    /**
-     * The path where no classes have been found.
-     *
-     * @var string[]
-     */
-    protected $path;
-
-    /**
-     * Create a new instance.
-     *
-     * @param string $validatorName The name of the originating validator.
-     *
-     * @param string $psr0Prefix    The specified psr-0 namespace prefix.
-     *
-     * @param string $path          The specified path for the prefix.
-     */
-    public function __construct($validatorName, $psr0Prefix, $path)
-    {
-        parent::__construct($validatorName, $psr0Prefix);
-        $this->path = $path;
-    }
 }

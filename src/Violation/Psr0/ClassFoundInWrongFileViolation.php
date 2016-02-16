@@ -61,17 +61,19 @@ EOF;
      *
      * @param string $validatorName The name of the originating validator.
      *
+     * @param string $psr0Prefix    The psr-0 prefix of the validator.
+     *
+     * @param string $path          The specified path for the prefix.
+     *
      * @param string $class         The class in question.
      *
      * @param string $fileIs        The file name where it has been found.
      *
      * @param string $fileShould    The file name where it should have been found.
-     *
-     * @param string $psr0Prefix    The psr-0 prefix of the validator.
      */
-    public function __construct($validatorName, $class, $fileIs, $fileShould, $psr0Prefix)
+    public function __construct($validatorName, $psr0Prefix, $path, $class, $fileIs, $fileShould)
     {
-        parent::__construct($validatorName, $psr0Prefix);
+        parent::__construct($validatorName, $psr0Prefix, $path);
         $this->class      = $class;
         $this->fileIs     = $fileIs;
         $this->fileShould = $fileShould;

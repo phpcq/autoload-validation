@@ -47,30 +47,22 @@ EOF;
     protected $namespace;
 
     /**
-     * The path where the class has been found.
-     *
-     * @var string
-     */
-    protected $path;
-
-    /**
      * Create a new instance.
      *
      * @param string $validatorName The name of the originating validator.
      *
-     * @param string $class         The class name.
-     *
      * @param string $psr0Prefix    The specified psr-0 namespace prefix.
      *
-     * @param string $namespace     The namespace of the class.
-     *
      * @param string $path          The path where the class has been found.
+     *
+     * @param string $class         The class name.
+     *
+     * @param string $namespace     The namespace of the class.
      */
-    public function __construct($validatorName, $class, $psr0Prefix, $namespace, $path)
+    public function __construct($validatorName, $psr0Prefix, $path, $class, $namespace)
     {
-        parent::__construct($validatorName, $psr0Prefix);
+        parent::__construct($validatorName, $psr0Prefix, $path);
         $this->class     = $class;
         $this->namespace = $namespace;
-        $this->path      = $path;
     }
 }

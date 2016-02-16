@@ -99,9 +99,9 @@ class Psr0ValidatorTest extends ValidatorTestCase
             $this->mockReport(
                 'PhpCodeQuality\AutoloadValidation\Violation\Psr0\NameSpaceInvalidViolation',
                 array(
-                    'path'          => '/some/dir/src',
-                    'psr0Prefix'    => 0,
                     'validatorName' => 'autoload.psr-0',
+                    'psr0Prefix'    => 0,
+                    'path'          => '/src',
                 )
             )
         );
@@ -227,9 +227,9 @@ class Psr0ValidatorTest extends ValidatorTestCase
                 array(
                     'PhpCodeQuality\AutoloadValidation\Violation\Psr0\NamespaceShouldEndWithBackslashViolation',
                     array(
+                        'validatorName' => 'autoload.psr-0',
                         'psr0Prefix'    => 'Acme\Log\Writer',
-                        'path'          => '/acme-log-writer/lib',
-                        'validatorName' => 'autoload.psr-0'
+                        'path'          => 'acme-log-writer/lib',
                     )
                 ),
                 array('Acme\Log\Writer' => 'acme-log-writer/lib'),
@@ -239,11 +239,12 @@ class Psr0ValidatorTest extends ValidatorTestCase
                 array(
                     'PhpCodeQuality\AutoloadValidation\Violation\Psr0\ClassFoundInWrongFileViolation',
                     array(
+                        'validatorName' => 'autoload.psr-0',
+                        'psr0Prefix'    => 'Acme\Log\Writer\\',
+                        'path'          => 'acme-log-writer/lib',
                         'class'         => 'Acme\Log\Writer\File_Writer',
                         'fileIs'        => '/acme-log-writer/lib/Acme/Log/Writer/File_Writerr.php',
                         'fileShould'    => '/acme-log-writer/lib/Acme/Log/Writer/File/Writer.php',
-                        'psr0Prefix'    => 'Acme\Log\Writer\\',
-                        'validatorName' => 'autoload.psr-0'
                     )
                 ),
                 array('Acme\Log\Writer\\' => 'acme-log-writer/lib'),
@@ -253,11 +254,11 @@ class Psr0ValidatorTest extends ValidatorTestCase
                 array(
                     'PhpCodeQuality\AutoloadValidation\Violation\Psr0\NamespacePrefixMismatchViolation',
                     array(
-                        'class'         => 'Acme\Log\File_Writer',
+                        'validatorName' => 'autoload.psr-0',
                         'psr0Prefix'    => 'Acme\Log\Writer\\',
+                        'path'          => 'acme-log-writer/lib',
+                        'class'         => 'Acme\Log\File_Writer',
                         'namespace'     => 'Acme\Log',
-                        'path'          => '/acme-log-writer/lib',
-                        'validatorName' => 'autoload.psr-0'
                     )
                 ),
                 array('Acme\Log\Writer\\' => 'acme-log-writer/lib'),
@@ -267,11 +268,11 @@ class Psr0ValidatorTest extends ValidatorTestCase
                 array(
                     'PhpCodeQuality\AutoloadValidation\Violation\Psr0\NamespacePrefixMismatchViolation',
                     array(
-                        'class'         => 'Symfony\Core\Request',
+                        'validatorName' => 'autoload.psr-0',
                         'psr0Prefix'    => 'Symfony\Coreeeeeee\\',
+                        'path'          => 'vendor/symfony/core',
+                        'class'         => 'Symfony\Core\Request',
                         'namespace'     => 'Symfony\Core',
-                        'path'          => '/vendor/symfony/core',
-                        'validatorName' => 'autoload.psr-0'
                     )
                 ),
                 array('Symfony\Coreeeeeee\\' => 'vendor/symfony/core'),
@@ -281,11 +282,11 @@ class Psr0ValidatorTest extends ValidatorTestCase
                 array(
                     'PhpCodeQuality\AutoloadValidation\Violation\Psr0\NamespacePrefixMismatchViolation',
                     array(
-                        'class'         => 'Zend\Acl',
+                        'validatorName' => 'autoload.psr-0',
                         'psr0Prefix'    => 'Zend\Acl\\',
+                        'path'          => 'usr/includes',
+                        'class'         => 'Zend\Acl',
                         'namespace'     => 'Zend',
-                        'path'          => '/usr/includes',
-                        'validatorName' => 'autoload.psr-0'
                     )
                 ),
                 array('Zend\Acl\\' => 'usr/includes'),
@@ -295,11 +296,12 @@ class Psr0ValidatorTest extends ValidatorTestCase
                 array(
                     'PhpCodeQuality\AutoloadValidation\Violation\Psr0\ClassFoundInWrongFileViolation',
                     array(
+                        'validatorName' => 'autoload.psr-0',
+                        'psr0Prefix'    => 'Acme\Log\Writer\\',
+                        'path'          => 'acme-log-writer/lib',
                         'class'         => 'Acme\Log\Writer\File_Writer',
                         'fileIs'        => '/acme-log-writer/lib/Acme/Log/Writer/File_Writer.php',
                         'fileShould'    => '/acme-log-writer/lib/Acme/Log/Writer/File/Writer.php',
-                        'psr0Prefix'    => 'Acme\Log\Writer\\',
-                        'validatorName' => 'autoload.psr-0'
                     )
                 ),
                 array('Acme\Log\Writer\\' => 'acme-log-writer/lib'),
@@ -309,11 +311,12 @@ class Psr0ValidatorTest extends ValidatorTestCase
                 array(
                     'PhpCodeQuality\AutoloadValidation\Violation\Psr0\ClassFoundInWrongFileViolation',
                     array(
+                        'validatorName' => 'autoload.psr-0',
+                        'psr0Prefix'    => 'Acme\\',
+                        'path'          => 'acme-log-writer/lib',
                         'class'         => 'Acme\Log\Writer\File_Writer',
                         'fileIs'        => '/acme-log-writer/lib/Acme/Log/Writer/File_Writer.php',
                         'fileShould'    => '/acme-log-writer/lib/Acme/Log/Writer/File/Writer.php',
-                        'psr0Prefix'    => 'Acme\\',
-                        'validatorName' => 'autoload.psr-0'
                     )
                 ),
                 array('Acme\\' => 'acme-log-writer/lib'),
@@ -333,11 +336,12 @@ class Psr0ValidatorTest extends ValidatorTestCase
                 array(
                     'PhpCodeQuality\AutoloadValidation\Violation\Psr0\ClassFoundInWrongFileViolation',
                     array(
+                        'validatorName' => 'autoload.psr-0',
+                        'psr0Prefix'    => 'Vendor_PearStyle_NameSpace_',
+                        'path'          => 'usr/includes',
                         'class'         => 'Vendor_PearStyle_NameSpace_ClassNam',
                         'fileIs'        => '/includes/Vendor/PearStyle/NameSpace/ClassName.php',
                         'fileShould'    => '/usr/includes/Vendor/PearStyle/NameSpace/ClassNam.php',
-                        'psr0Prefix'    => 'Vendor_PearStyle_NameSpace_',
-                        'validatorName' => 'autoload.psr-0'
                     )
                 ),
                 array('Vendor_PearStyle_NameSpace_' => 'usr/includes'),
@@ -347,11 +351,12 @@ class Psr0ValidatorTest extends ValidatorTestCase
                 array(
                     'PhpCodeQuality\AutoloadValidation\Violation\Psr0\ClassFoundInWrongFileViolation',
                     array(
+                        'validatorName' => 'autoload.psr-0',
+                        'psr0Prefix'    => 'Vendor_PearStyle_NameSpace',
+                        'path'          => 'usr/includes',
                         'class'         => 'Vendor_PearStyle_NameSpace_ClassName',
                         'fileIs'        => '/includes/Vendor/PearStyle/NameSpace/ClassName.php',
                         'fileShould'    => '/usr/includes/Vendor/PearStyle/NameSpace/ClassName.php',
-                        'psr0Prefix'    => 'Vendor_PearStyle_NameSpace',
-                        'validatorName' => 'autoload.psr-0'
                     )
                 ),
                 array('Vendor_PearStyle_NameSpace' => 'usr/includes'),

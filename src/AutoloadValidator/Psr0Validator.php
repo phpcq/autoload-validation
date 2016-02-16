@@ -77,11 +77,7 @@ class Psr0Validator extends AbstractValidator
         $subPath = $this->prependPathWithBaseDir($path);
         if (is_numeric($prefix)) {
             $this->report->error(
-                new NameSpaceInvalidViolation(
-                    $this->getName(),
-                    $prefix,
-                    $subPath
-                )
+                new NameSpaceInvalidViolation($this->getName(), $prefix, $path)
             );
 
             return;
@@ -96,11 +92,7 @@ class Psr0Validator extends AbstractValidator
             && !isset($classMap[$prefix])
         ) {
             $this->report->warn(
-                new NamespaceShouldEndWithBackslashViolation(
-                    $this->getName(),
-                    $prefix,
-                    $subPath
-                )
+                new NamespaceShouldEndWithBackslashViolation($this->getName(), $prefix, $path)
             );
         }
 
@@ -112,7 +104,7 @@ class Psr0Validator extends AbstractValidator
             return;
         }
 
-        $this->validateClassMap($classMap, $subPath, $prefix);
+        $this->validateClassMap($classMap, $subPath, $prefix, $path);
     }
 
     /**
@@ -124,9 +116,11 @@ class Psr0Validator extends AbstractValidator
      *
      * @param string $prefix   The psr-0 top level namespace.
      *
+     * @param string $path     The psr-0 top level path.
+     *
      * @return void
      */
-    private function validateClassMap($classMap, $subPath, $prefix)
+    private function validateClassMap($classMap, $subPath, $prefix, $path)
     {
         $cleaned = $prefix;
         if ('\\' === substr($prefix, -1)) {
@@ -151,10 +145,10 @@ class Psr0Validator extends AbstractValidator
                 $this->report->error(
                     new NamespacePrefixMismatchViolation(
                         $this->getName(),
-                        $class,
                         $prefix,
-                        $this->getNameSpaceFromClassName($class),
-                        $subPath
+                        $path,
+                        $class,
+                        $this->getNameSpaceFromClassName($class)
                     )
                 );
 
@@ -174,10 +168,11 @@ class Psr0Validator extends AbstractValidator
                 $this->report->error(
                     new ClassFoundInWrongFileViolation(
                         $this->getName(),
+                        $prefix,
+                        $path,
                         $class,
                         $file,
-                        $fileNameShould . $this->getExtensionFromFileName($file),
-                        $prefix
+                        $fileNameShould . $this->getExtensionFromFileName($file)
                     )
                 );
             }

@@ -29,26 +29,4 @@ class NoClassesFoundInPathViolation extends Psr0ValidatorViolation
      * This error message is shown when a scanned path from a validator does not contain any classes.
      */
     const MESSAGE = '{validatorName}: No classes found in {path} for psr-0 prefix {psr0Prefix}';
-
-    /**
-     * The path where no classes have been found.
-     *
-     * @var string[]
-     */
-    protected $path;
-
-    /**
-     * Create a new instance.
-     *
-     * @param string $validatorName The name of the originating validator.
-     *
-     * @param string $psr0Prefix    The specified psr-0 namespace prefix.
-     *
-     * @param string $path          The path where no classes have been found.
-     */
-    public function __construct($validatorName, $psr0Prefix, $path)
-    {
-        parent::__construct($validatorName, $psr0Prefix);
-        $this->path = $path;
-    }
 }
