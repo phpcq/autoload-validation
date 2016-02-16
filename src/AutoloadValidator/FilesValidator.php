@@ -51,10 +51,8 @@ class FilesValidator extends AbstractValidator
             }
         }
 
-        // No op.
         return function ($class) use ($found) {
             foreach ($found as $loader) {
-                // FIXME: add try catching here?
                 $loader($class);
             }
         };

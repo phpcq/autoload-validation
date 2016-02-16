@@ -114,7 +114,6 @@ class PsrLogDestination implements DestinationInterface
     private function prepareContext($parameters)
     {
         $new = array();
-        // FIXME: we should perform better formatting here, like inverting the color or such.
         foreach ($parameters as $name => $value) {
             if (is_array($value)) {
                 $subNew = array();
