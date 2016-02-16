@@ -168,6 +168,10 @@ class EnumeratingClassLoader
      */
     public function register($prepend = false)
     {
+        // Just to make sure we have them loaded.
+        spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException');
+        spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException');
+
         $this->previousLoaders = spl_autoload_functions();
         foreach ($this->previousLoaders as $previousLoader) {
             spl_autoload_unregister($previousLoader);
