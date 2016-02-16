@@ -23,7 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation\Violation\Psr0;
 /**
  * This error message is shown when the namespace portion of a psr-0 information is invalid.
  */
-class NameSpaceInvalidViolation extends Psr0ValidatorViolation
+class NameSpaceInvalidViolation extends AbstractPsr0Violation
 {
     /**
      * This error message is shown when retrieving the value as text.

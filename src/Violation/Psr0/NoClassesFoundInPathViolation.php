@@ -23,7 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation\Violation\Psr0;
 /**
  * This error message is shown when a path specified in a psr-0 information does not contain any classes.
  */
-class NoClassesFoundInPathViolation extends Psr0ValidatorViolation
+class NoClassesFoundInPathViolation extends AbstractPsr0Violation
 {
     /**
      * This error message is shown when a scanned path from a validator does not contain any classes.

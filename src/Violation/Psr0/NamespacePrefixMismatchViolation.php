@@ -23,7 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation\Violation\Psr0;
 /**
  * This violation is shown when the namespace of a class does not match the expected psr-0 prefix.
  */
-class NamespacePrefixMismatchViolation extends Psr0ValidatorViolation
+class NamespacePrefixMismatchViolation extends AbstractPsr0Violation
 {
     /**
      * The message that shall end up in logs.

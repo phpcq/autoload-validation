@@ -26,7 +26,7 @@ namespace PhpCodeQuality\AutoloadValidation\Violation\Psr0;
  * For example Foo would match in FooBar so the trailing backslashes solve the problem:
  * Foo\\ and FooBar\\ are distinct.
  */
-class NamespaceShouldEndWithBackslashViolation extends Psr0ValidatorViolation
+class NamespaceShouldEndWithBackslashViolation extends AbstractPsr0Violation
 {
     /**
      * Namespace declarations should end in \\ to make sure the auto loader responds exactly.
