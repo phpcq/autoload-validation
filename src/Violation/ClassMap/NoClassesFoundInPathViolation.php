@@ -23,7 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation\Violation\ClassMap;
 /**
  * This error message is shown when a path specified in a classmap information does not contain any classes.
  */
-class NoClassesFoundInPathViolation extends ClassMapValidatorViolation
+class NoClassesFoundInPathViolation extends AbstractClassMapViolation
 {
     /**
      * This error message is shown when a scanned path from a validator does not contain any classes.

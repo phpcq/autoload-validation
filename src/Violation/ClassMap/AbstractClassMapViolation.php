@@ -25,7 +25,7 @@ use PhpCodeQuality\AutoloadValidation\Violation\ValidatorViolation;
 /**
  * This violation is originating from a classmap validator.
  */
-abstract class ClassMapValidatorViolation extends ValidatorViolation
+abstract class AbstractClassMapViolation extends ValidatorViolation
 {
     /**
      * The specified path.
