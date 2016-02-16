@@ -25,7 +25,7 @@ use PhpCodeQuality\AutoloadValidation\Violation\ValidatorViolation;
 /**
  * This violation is originating from a files validator.
  */
-abstract class FilesValidatorViolation extends ValidatorViolation
+abstract class AbstractFilesViolation extends ValidatorViolation
 {
     /**
      * The specified file.

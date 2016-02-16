@@ -23,7 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation\Violation\Files;
 /**
  * This error message is shown when a specified file could not be found.
  */
-class FileNotFoundViolation extends FilesValidatorViolation
+class FileNotFoundViolation extends AbstractFilesViolation
 {
     /**
      * This error message is shown when a scanned path from a validator does not contain any classes.
