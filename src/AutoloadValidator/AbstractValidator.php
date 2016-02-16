@@ -20,7 +20,6 @@
 
 namespace PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 
-use Composer\Autoload\ClassLoader;
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
 use PhpCodeQuality\AutoloadValidation\Report\Report;

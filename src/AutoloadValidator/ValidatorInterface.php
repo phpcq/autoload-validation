@@ -20,8 +20,6 @@
 
 namespace PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 
-use Composer\Autoload\ClassLoader;
-
 /**
  * This interface describes an autoload validator.
  */

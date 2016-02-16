@@ -20,7 +20,6 @@
 
 namespace PhpCodeQuality\AutoloadValidation;
 
-use Composer\Autoload\ClassLoader;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ValidatorInterface;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
