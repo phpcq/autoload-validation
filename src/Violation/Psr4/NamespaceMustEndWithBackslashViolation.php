@@ -23,7 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation\Violation\Psr4;
 /**
  * Namespace declarations must end in \\ to make sure the auto loader responds exactly.
  */
-class NamespaceMustEndWithBackslashViolation extends Psr4ValidatorViolation
+class NamespaceMustEndWithBackslashViolation extends AbstractPsr4Violation
 {
     /**
      * The message that shall end up in logs.

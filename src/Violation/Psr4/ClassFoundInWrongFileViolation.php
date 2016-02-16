@@ -23,7 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation\Violation\Psr4;
 /**
  * This violation is shown when a class has been found in the wrong file.
  */
-class ClassFoundInWrongFileViolation extends Psr4ValidatorViolation
+class ClassFoundInWrongFileViolation extends AbstractPsr4Violation
 {
     /**
      * This error message is shown when retrieving the value as text.

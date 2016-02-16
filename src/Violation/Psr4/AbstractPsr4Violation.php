@@ -25,7 +25,7 @@ use PhpCodeQuality\AutoloadValidation\Violation\ValidatorViolation;
 /**
  * This violation is originating from a psr-4 validator.
  */
-abstract class Psr4ValidatorViolation extends ValidatorViolation
+abstract class AbstractPsr4Violation extends ValidatorViolation
 {
     /**
      * The specified namespace.
