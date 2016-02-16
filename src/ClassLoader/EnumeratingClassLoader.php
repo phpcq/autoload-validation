@@ -71,7 +71,7 @@ class EnumeratingClassLoader
         }
         try {
             foreach ($this->loaders as $name => $loader) {
-                if ($loader($class)) {
+                if (call_user_func($loader, $class)) {
                     if ($class === $this->loading) {
                         $this->loading = null;
                     }

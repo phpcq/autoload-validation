@@ -23,7 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation\Violation;
 /**
  * This is the base class for a violation.
  */
-abstract class AbstractViolation implements ViolationInterface, \JsonSerializable
+abstract class AbstractViolation implements ViolationInterface
 {
     /**
      * The message that shall end up in logs.
@@ -87,13 +87,5 @@ abstract class AbstractViolation implements ViolationInterface, \JsonSerializabl
 
         // interpolate replacement values into the message and return
         return strtr($message, $replace);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function jsonSerialize()
-    {
-        return $this->getParameters();
     }
 }

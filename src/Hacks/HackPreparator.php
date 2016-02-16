@@ -210,7 +210,7 @@ class HackPreparator
         $logger = $this->logger;
 
         return function ($class) use ($loader, $hackName, $logger) {
-            if ($loader($class)) {
+            if (call_user_func($loader, $class)) {
                 $logger->debug(
                     'Custom class loader hack {hackName} loaded {class}.',
                     array(

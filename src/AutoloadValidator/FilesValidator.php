@@ -53,8 +53,12 @@ class FilesValidator extends AbstractValidator
 
         return function ($class) use ($found) {
             foreach ($found as $loader) {
-                $loader($class);
+                if (call_user_func($loader, $class)) {
+                    return true;
+                }
             }
+
+            return null;
         };
     }
 
