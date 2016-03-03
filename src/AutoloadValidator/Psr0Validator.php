@@ -83,7 +83,7 @@ class Psr0Validator extends AbstractValidator
             return;
         }
 
-        $classMap = $this->classMapFromPath($subPath, $prefix);
+        $classMap = $this->classMapFromPath($subPath);
 
         // All psr-0 namespace prefixes should end with \ unless they are an exact class name or pear style.
         if ($prefix

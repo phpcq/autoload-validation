@@ -83,7 +83,7 @@ class Psr4Validator extends AbstractValidator
             return;
         }
 
-        $classMap = $this->classMapFromPath($subPath, $prefix);
+        $classMap = $this->classMapFromPath($subPath);
         if (empty($classMap)) {
             $this->report->error(
                 new NoClassesFoundInPathViolation($this->getName(), $prefix, $path)
