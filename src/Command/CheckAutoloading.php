@@ -13,19 +13,30 @@
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Tristan Lins <tristan@lins.io>
- * @copyright  Christian Schiffler <c.schiffler@cyberspectrum.de>, Tristan Lins <tristan@lins.io>
- * @link       https://github.com/phpcq/autoload-validation
+ * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
+ * @link       https://github.com/phpcq/autoload-validation
  * @filesource
  */
 
 namespace PhpCodeQuality\AutoloadValidation\Command;
 
 use Composer\Autoload\ClassLoader;
+use PhpCodeQuality\AutoloadValidation\AllLoadingAutoLoader;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory;
+use PhpCodeQuality\AutoloadValidation\ClassLoader\EnumeratingClassLoader;
 use PhpCodeQuality\AutoloadValidation\ClassMapGenerator;
+use PhpCodeQuality\AutoloadValidation\Hacks\HackPreparator;
+use PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface;
+use PhpCodeQuality\AutoloadValidation\Report\Destination\PsrLogDestination;
+use PhpCodeQuality\AutoloadValidation\Report\Report;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -36,32 +47,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 class CheckAutoloading extends Command
 {
     /**
-     * The current input interface.
+     * The exit code map.
      *
-     * @var InputInterface
+     * @var array
      */
-    protected $input;
-
-    /**
-     * The current output interface.
-     *
-     * @var OutputInterface
-     */
-    protected $output;
-
-    /**
-     * The overall class map.
-     *
-     * @var string[]
-     */
-    protected $classMap;
-
-    /**
-     * The class loader to which the classes shall get registered.
-     *
-     * @var ClassLoader
-     */
-    protected $loader;
+    private static $exitCodes = array(
+        false => 1,
+        true => 0
+    );
 
     /**
      * {@inheritDoc}
@@ -70,525 +63,204 @@ class CheckAutoloading extends Command
     {
         $this
             ->setName('phpcq:check-autoloading')
-            ->setDescription('Check that the composer.json autoloading keys are correct.')
+            ->setDescription(<<<EOF
+Check that the composer.json auto loading keys are correct.
+This command has support for:
+- psr-0 scanning
+- psr-4 scanning
+- classmap scanning
+
+Note that by default the legacy hacks for Contao auto loader is still on, if you do not want this pass the
+<comment>--disable-legacy-hacks (-d)</comment> option. This behaviour will get removed in Version 2.0.
+
+However, a warning will get shown if the Contao auto loader is used without forcing it to be so.
+EOF
+            )
             ->addArgument(
                 'root-dir',
                 InputArgument::OPTIONAL,
                 'The directory where the composer.json is located at.',
                 '.'
+            )
+            ->addOption(
+                'strict',
+                's',
+                InputOption::VALUE_NONE,
+                'Perform strict validations. This converts discovered warnings to errors'
+            )
+            ->addOption(
+                'add-autoloader',
+                null,
+                (InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY),
+                'Path to an auto loader PHP include file to probe when testing class loading.' . "\r\n" .
+                'Files passed will get included at the beginning.'  . "\r\n" .
+                'This allows to support cumbersome third party auto loaders.'
+            )
+            ->addOption(
+                'disable-legacy-hacks',
+                'd',
+                InputOption::VALUE_NONE,
+                'Path this to disable the now deprecated auto loader hacks of Version 1.0 to probe for Contao classes.'
             );
     }
 
     /**
-     * Cut the file extension from the filename and return the result.
+     * Execute the tests.
      *
-     * @param string $file The file name.
+     * @param InputInterface  $input  An InputInterface instance.
+     * @param OutputInterface $output An OutputInterface instance.
      *
-     * @return string
-     */
-    protected function cutExtensionFromFileName($file)
-    {
-        return preg_replace('/\\.[^.\\s]{2,3}$/', '', $file);
-    }
-
-    /**
-     * Cut the file extension from the filename and return the result.
-     *
-     * @param string $file The file name.
-     *
-     * @return string
-     */
-    protected function getExtensionFromFileName($file)
-    {
-        return preg_replace('/^.*(\\.[^.\\s]{2,3})$/', '$1', $file);
-    }
-
-    /**
-     * Get the namespace name from the full class name.
-     *
-     * @param string $class The full class name.
-     *
-     * @return string
-     */
-    protected function getNameSpaceFromClassName($class)
-    {
-        $chunks = explode('\\', $class);
-        array_pop($chunks);
-
-        return implode('\\', $chunks);
-    }
-
-    /**
-     * Get the class name from the full class name.
-     *
-     * @param string $class The full class name.
-     *
-     * @return string
-     */
-    protected function getClassFromClassName($class)
-    {
-        $chunks = explode('\\', $class);
-
-        return array_pop($chunks);
-    }
-
-    /**
-     * Create a class map.
-     *
-     * @param string      $subPath   The path.
-     *
-     * @param string|null $namespace The namespace prefix (optional).
-     *
-     * @return array
-     */
-    protected function createClassMap($subPath, $namespace = null)
-    {
-        $classMap = ClassMapGenerator::createMap($subPath, null, $namespace);
-
-        if (array_intersect($this->classMap, $classMap)) {
-            $this->output->writeln(
-                sprintf(
-                    '<info>The class(es) %s are available via multiple autoloader values.</info>',
-                    implode(', ', array_intersect($this->classMap, $classMap))
-                )
-            );
-        }
-
-        $this->classMap = array_merge($this->classMap, $classMap);
-
-        return $classMap;
-    }
-
-    /**
-     * Check that the auto loading information is correct.
-     *
-     * @param array  $classMap  The autoload class map.
-     *
-     * @param string $subPath   The base directory.
-     *
-     * @param string $namespace The namespace prefix defined for psr-0.
-     *
-     * @return bool
-     */
-    public function validateComposerAutoLoadingPsr0ClassMap($classMap, $subPath, $namespace)
-    {
-        $result = true;
-        $nsLen  = strlen($namespace);
-        foreach ($classMap as $class => $file) {
-            if ($class[0] == '\\') {
-                $class = substr($class, 1);
-            }
-            $classNs = $this->getNameSpaceFromClassName($class);
-            $classNm = $this->getClassFromClassName($class);
-
-            // PEAR-like class name or namespace does not match.
-            if ((false !== strrpos($class, '\\')) && $namespace && substr($classNs, 0, $nsLen) !== $namespace) {
-                $result = false;
-
-                $this->output->writeln(
-                    sprintf(
-                        '<error>Class "%s" namespace "%s" does not match expected psr-0 namespace prefix "%s" for ' .
-                        'directory "%s"!</error>',
-                        $class,
-                        $this->getNameSpaceFromClassName($class),
-                        $namespace,
-                        $subPath
-                    )
-                );
-                continue;
-            }
-
-            if ($class === $namespace) {
-                $result = false;
-                $this->output->writeln(
-                    sprintf(
-                        '<error>Class "%s" is used as psr-0 namespace prefix "%s" for directory "%s"!</error>',
-                        $class,
-                        $namespace,
-                        $subPath
-                    )
-                );
-                continue;
-            }
-
-            $classNm        = ltrim('\\' . $classNm, '\\');
-            $fileNameShould = rtrim($subPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-            if ($classNs) {
-                $fileNameShould .= str_replace('\\', DIRECTORY_SEPARATOR, $classNs) . DIRECTORY_SEPARATOR;
-            }
-
-            $fileNameShould .= str_replace('_', DIRECTORY_SEPARATOR, $classNm);
-
-            if ($fileNameShould !== $this->cutExtensionFromFileName($file)) {
-                $result = false;
-                $this->output->writeln(
-                    sprintf(
-                        '<error>Class "%s" found in file "%s" should reside in file "%s" (psr-0 prefix "%s")</error>',
-                        $class,
-                        $file,
-                        $fileNameShould . $this->getExtensionFromFileName($file),
-                        $namespace
-                    )
-                );
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Check that the auto loading information is correct.
-     *
-     * @param array  $information The autoload information.
-     *
-     * @param string $baseDir     The base directory.
-     *
-     * @return bool
-     */
-    public function validateComposerAutoLoadingPsr0($information, $baseDir)
-    {
-        $result = true;
-
-        // Scan all directories mentioned and validate the class map against the entries.
-        foreach ($information as $namespace => $path) {
-            $subPath  = str_replace('//', '/', $baseDir . '/' . $path);
-            $classMap = $this->createClassMap($subPath, $namespace);
-            $this->loader->add($namespace, $subPath);
-
-            if (!$this->validateComposerAutoLoadingPsr0ClassMap(
-                $classMap,
-                $subPath,
-                $namespace
-            )) {
-                $result = false;
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Check that the auto loading information is correct.
-     *
-     * @param array  $classMap  The autoload class map.
-     *
-     * @param string $subPath   The base directory.
-     *
-     * @param string $namespace The namespace prefix defined for psr-4.
-     *
-     * @return bool
-     */
-    public function validateComposerAutoLoadingPsr4ClassMap($classMap, $subPath, $namespace)
-    {
-        $result = true;
-        if (substr($namespace, -1) == '\\') {
-            $namespace = substr($namespace, 0, -1);
-        }
-        $nsLen = strlen($namespace);
-        foreach ($classMap as $class => $file) {
-            if ($class[0] == '\\') {
-                $class = substr($class, 1);
-            }
-
-            if (substr($class, 0, $nsLen) !== $namespace) {
-                $result = false;
-                $this->output->writeln(
-                    sprintf(
-                        '<error>Class "%s" namespace "%s" does not match expected psr-4 namespace prefix "%s"!</error>',
-                        $class,
-                        $this->getNameSpaceFromClassName($class),
-                        $namespace,
-                        $file
-                    )
-                );
-                continue;
-            }
-
-            if ($class === $namespace) {
-                $result = false;
-                $this->output->writeln(
-                    sprintf(
-                        '<error>Class "%s" is used as psr-4 namespace prefix "%s" for directory "%s"!</error>',
-                        $class,
-                        $namespace,
-                        $subPath
-                    )
-                );
-                continue;
-            }
-
-            $fileNameShould = str_replace(
-                '//',
-                '/',
-                $subPath . '/' . str_replace(
-                    '\\',
-                    '/',
-                    substr(
-                        $class,
-                        ($nsLen + 1)
-                    )
-                )
-            );
-            if ($fileNameShould !== $this->cutExtensionFromFileName($file)) {
-                $result = false;
-                $this->output->writeln(
-                    sprintf(
-                        '<error>Class "%s" found in file "%s" should reside in file "%s" (psr-4 prefix "%s")</error>',
-                        $class,
-                        $file,
-                        $fileNameShould . $this->getExtensionFromFileName($file),
-                        $namespace
-                    )
-                );
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Check that the auto loading information is correct.
-     *
-     * @param array  $information The autoload information.
-     *
-     * @param string $baseDir     The base directory.
-     *
-     * @return bool
-     */
-    public function validateComposerAutoLoadingPsr4($information, $baseDir)
-    {
-        $result = true;
-        // Scan all directories mentioned and validate the class map against the entries.
-        foreach ($information as $namespace => $path) {
-            $subPath  = str_replace('//', '/', $baseDir . '/' . $path);
-            $classMap = $this->createClassMap($subPath, $namespace);
-            $this->loader->addPsr4($namespace, $subPath);
-
-            if (!$this->validateComposerAutoLoadingPsr4ClassMap(
-                $classMap,
-                $subPath,
-                $namespace
-            )) {
-                $result = false;
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Check that the auto loading information is correct.
-     *
-     * @param array  $classMap The autoload class map.
-     *
-     * @param string $subPath  The base directory.
-     *
-     * @return bool
-     */
-    public function validateComposerAutoLoadingClassMapClassMap($classMap, $subPath)
-    {
-        $result = true;
-        if (empty($classMap)) {
-            $result = false;
-            $this->output->writeln(sprintf('<error>No classes found in classmap prefix "%s")</error>', $subPath));
-        }
-
-        return $result;
-    }
-
-    /**
-     * Check that the auto loading information is correct.
-     *
-     * @param array  $information The autoload information.
-     *
-     * @param string $baseDir     The base directory.
-     *
-     * @return bool
-     */
-    public function validateComposerAutoLoadingClassMap($information, $baseDir)
-    {
-        $result = true;
-        // Scan all directories mentioned and validate the class map against the entries.
-        foreach ($information as $path) {
-            $subPath  = str_replace('//', '/', $baseDir . '/' . $path);
-            $classMap = $this->createClassMap($subPath);
-            $this->loader->addClassMap($classMap);
-
-            $this->classMap = array_merge($this->classMap, $classMap);
-            if (!$this->validateComposerAutoLoadingClassMapClassMap(
-                $classMap,
-                $subPath
-            )) {
-                $result = false;
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Check that the auto loading information is correct.
-     *
-     * @param array  $information The autoload information.
-     *
-     * @param string $baseDir     The base directory.
-     *
-     * @return bool
-     *
-     * @throws \RuntimeException When an unknown auto loader type is encountered.
-     */
-    public function validateComposerAutoLoading($information, $baseDir)
-    {
-        $result = true;
-        foreach ($information as $type => $content) {
-            switch ($type) {
-                case 'psr-0':
-                    $result = $this->validateComposerAutoLoadingPsr0($content, $baseDir) && $result;
-                    break;
-                case 'psr-4':
-                    $result = $this->validateComposerAutoLoadingPsr4($content, $baseDir) && $result;
-                    break;
-                case 'classmap':
-                    $result = $this->validateComposerAutoLoadingClassMap($content, $baseDir) && $result;
-                    break;
-                default:
-                    throw new \RuntimeException('Unknown auto loader type ' . $type . ' encountered!');
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Ensure that a composer autoload section is present.
-     *
-     * @param array $composer The composer json contents.
-     *
-     * @return bool
-     */
-    public function hasAutoloadSection($composer)
-    {
-        if (!(isset($composer['autoload']) || isset($composer['autoload-dev']))) {
-            if (OutputInterface::VERBOSITY_VERBOSE <= $this->output->getVerbosity()) {
-                $this->output->writeln('<info>No autoload information found, skipping test.</info>');
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Check if the given interface/class/trait is already loaded.
-     *
-     * @param string $namespacedName The full name of the class/interface/trait.
-     *
-     * @return bool
-     */
-    protected function isLoaded($namespacedName)
-    {
-        return (class_exists($namespacedName, false)
-            || interface_exists($namespacedName, false)
-            || (function_exists('trait_exists') && trait_exists($namespacedName, false)));
-    }
-
-    /**
-     * Check that the auto loading information is correct.
-     *
-     * @return bool
-     */
-    public function tryLoadAllClasses()
-    {
-        $result = true;
-
-        // Trick Contao 2.11 into believing it is installed.
-        if (!defined('TL_ROOT')) {
-            define('TL_ROOT', '/tmp');
-        }
-
-        // Try hacking via Contao autoloader.
-        spl_autoload_register(function ($class) {
-            if (substr($class, 0, 7) !== 'Contao\\') {
-                spl_autoload_call('Contao\\' . $class);
-
-                if (class_exists('Contao\\' . $class, false) && !class_exists($class, false)) {
-                    class_alias('Contao\\' . $class, $class);
-                }
-            }
-        });
-
-        // Now try to autoload all classes.
-        foreach ($this->classMap as $class => $file) {
-            if (!$this->isLoaded($class)) {
-                try {
-                    if (!$this->loader->loadClass($class)) {
-                        $this->output->writeln(
-                            sprintf(
-                                '<error>The autoloader could not load %s (should be found from file %s).</error>',
-                                $class,
-                                $file
-                            )
-                        );
-                        $result = false;
-                    }
-                } catch (\ErrorException $exception) {
-                    $this->output->writeln(
-                        sprintf(
-                            '<error>ERROR loading class %s: "%s".</error>',
-                            $class,
-                            $exception->getMessage()
-                        )
-                    );
-                    $result = false;
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * {@inheritDoc}
+     * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->input    = $input;
-        $this->output   = $output;
-        $this->classMap = array();
-        $this->loader   = new ClassLoader();
-
-        $rootDir  = realpath($input->getArgument('root-dir'));
-        $composer = json_decode(file_get_contents($rootDir . '/composer.json'), true);
-
-        if (!$this->hasAutoloadSection($composer)) {
-            return 0;
+        if ($root = $input->getArgument('root-dir')) {
+            chdir(realpath($root));
         }
 
-        if (isset($composer['autoload'])) {
-            if (!$this->validateComposerAutoLoading($composer['autoload'], $rootDir)) {
-                $output->writeln('<error>The autoload information in composer.json is incorrect!</error>');
-                return 1;
-            }
-        }
+        $rootDir = realpath(getcwd());
+        $logger  = new ConsoleLogger($output);
 
-        if (isset($composer['autoload-dev'])) {
-            if (!$this->validateComposerAutoLoading($composer['autoload-dev'], $rootDir)) {
-                $output->writeln('<error>The autoload-dev information in composer.json is incorrect!</error>');
-                return 1;
-            }
-        }
-
-        if (!$this->tryLoadAllClasses()) {
-            $output->writeln('<error>The autoloading of all classes failed!</error>');
+        $composerJson = $rootDir . '/composer.json';
+        if (!file_exists($composerJson)) {
+            $logger->error(
+                '<error>File not found, can not analyze: {file}</error> ',
+                array('file' => $composerJson)
+            );
 
             return 1;
         }
 
-        if (OutputInterface::VERBOSITY_VERBOSE <= $output->getVerbosity()) {
-            $output->writeln('<info>The autoloader information in composer.json is correct.</info>');
+        $destinations   = array();
+        $destinations[] = new PsrLogDestination($logger);
+
+        $report   = $this->prepareReport($input, $logger);
+        $composer = json_decode(file_get_contents($composerJson), true);
+        $factory  = new AutoloadValidatorFactory($rootDir, new ClassMapGenerator(), $report);
+        $test     = new AutoloadValidator($factory->createFromComposerJson($composer), $report);
+        $test->validate();
+        if ($report->hasError()) {
+            $logger->error('<error>Testing loaders found errors</error> ');
         }
 
-        return 0;
+        $enumLoader = new EnumeratingClassLoader();
+        $this->prepareLoader($enumLoader, $test);
+
+        $hacker = new HackPreparator($enumLoader, $logger);
+        if ($custom = $input->getOption('add-autoloader')) {
+            $hacker->prepareHacks(
+                $custom,
+                array(
+                    $rootDir,
+                    dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'hacks'
+                )
+            );
+        }
+        $this->prepareComposerFallbackLoader($enumLoader, $rootDir, $composer);
+        if (!($input->getOption('disable-legacy-hacks') || $input->getOption('add-autoloader'))) {
+            $hacker->prepareLegacyHack();
+        }
+
+        $loadCycle = new AllLoadingAutoLoader($enumLoader, $test->getClassMap(), $logger);
+
+        return static::$exitCodes[$loadCycle->run() && !$report->hasError()];
+    }
+
+    /**
+     * Prepare the report.
+     *
+     * @param InputInterface  $input  The input to read options from.
+     *
+     * @param LoggerInterface $logger The logger to use.
+     *
+     * @return Report
+     */
+    private function prepareReport(InputInterface $input, LoggerInterface $logger)
+    {
+        $reportMap = array();
+        if ($input->getOption('strict')) {
+            $reportMap = array(
+                DestinationInterface::SEVERITY_ERROR   => DestinationInterface::SEVERITY_ERROR,
+                DestinationInterface::SEVERITY_WARNING => DestinationInterface::SEVERITY_ERROR,
+                DestinationInterface::SEVERITY_INFO    => DestinationInterface::SEVERITY_ERROR,
+            );
+        }
+
+        $destinations   = array();
+        $destinations[] = new PsrLogDestination($logger);
+
+        $report = new Report($destinations, $reportMap);
+
+        return $report;
+    }
+
+    /**
+     * Create a class loader that contains the classes found by us and the classes from the real composer installation.
+     *
+     * @param EnumeratingClassLoader $enumLoader        The enum loader to add to.
+     *
+     * @param AutoloadValidator      $autoloadValidator The auto loader validator.
+     *
+     * @return void
+     */
+    private function prepareLoader(EnumeratingClassLoader $enumLoader, AutoloadValidator $autoloadValidator)
+    {
+        $loaders = $autoloadValidator->getLoaders();
+        foreach ($loaders as $name => $loader) {
+            $enumLoader->add($loader, $name);
+        }
+    }
+
+    /**
+     * Prepare the composer fallback loader.
+     *
+     * @param EnumeratingClassLoader $enumLoader The enum loader to add to.
+     *
+     * @param string                 $baseDir    The base dir where the composer.json resides.
+     *
+     * @param array                  $composer   The contents of the composer.json.
+     *
+     * @return void
+     */
+    private function prepareComposerFallbackLoader(EnumeratingClassLoader $enumLoader, $baseDir, $composer)
+    {
+        $vendorDir = $baseDir . DIRECTORY_SEPARATOR . 'vendor';
+        if (isset($composer['extra']['vendor-dir'])) {
+            $vendorDir = $baseDir . DIRECTORY_SEPARATOR . $composer['extra']['vendor-dir'];
+        }
+
+        if (!is_dir($vendorDir)) {
+            return;
+        }
+        $loader = new ClassLoader();
+
+        if ($map = $this->includeIfExists($vendorDir . '/composer/autoload_namespaces.php')) {
+            foreach ($map as $namespace => $path) {
+                $loader->set($namespace, $path);
+            }
+        }
+
+        if ($map = $this->includeIfExists($vendorDir . '/composer/autoload_psr4.php')) {
+            foreach ($map as $namespace => $path) {
+                $loader->setPsr4($namespace, $path);
+            }
+        }
+        if ($classMap = $this->includeIfExists($vendorDir . '/composer/autoload_classmap.php')) {
+            $loader->addClassMap($classMap);
+        }
+
+        $enumLoader->add(array($loader, 'loadClass'), 'composer.fallback');
+    }
+
+    /**
+     * Include the given file if it exists and return the result.
+     *
+     * @param string $file The file name.
+     *
+     * @return bool|array
+     */
+    private function includeIfExists($file)
+    {
+        return file_exists($file) ? include $file : false;
     }
 }
