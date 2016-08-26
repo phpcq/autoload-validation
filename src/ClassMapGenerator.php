@@ -127,7 +127,7 @@ class ClassMapGenerator
 
                 if (!isset($map[$class])) {
                     $map[$class] = $filePath;
-                } elseif ($messages
+                } elseif (null !== $messages
                     && ($map[$class] !== $filePath)
                     && !preg_match('{/(test|fixture|example)s?/}i', strtr($map[$class].' '.$filePath, '\\', '/'))
                 ) {
@@ -141,13 +141,13 @@ class ClassMapGenerator
     }
 
     /**
+
+    /**
      * Extract the classes in the given file.
      *
      * @param string $path The file to check.
      *
-     * @throws \Exception        When the file does not exist or is not accessible.
-     *
-     * @throws \RuntimeException When any exception occurred while scanning the file.
+     * @throws \RuntimeException When the file does not exist or is not accessible.
      *
      * @return array The found classes.
      *
@@ -156,26 +156,34 @@ class ClassMapGenerator
      */
     private static function findClasses($path)
     {
-        $traits = version_compare(PHP_VERSION, '5.4', '<') ? '' : '|trait';
+        $extraTypes = PHP_VERSION_ID < 50400 ? '' : '|trait';
+        if (defined('HHVM_VERSION') && version_compare(HHVM_VERSION, '3.3', '>=')) {
+            $extraTypes .= '|enum';
+        }
 
-        try {
-            // @codingStandardsIgnoreStart
-            $contents = @php_strip_whitespace($path);
-            // @codingStandardsIgnoreEnd
-            if (!$contents) {
-                if (!file_exists($path)) {
-                    throw new \Exception('File does not exist');
-                }
-                if (!is_readable($path)) {
-                    throw new \Exception('File is not readable');
-                }
+        // @codingStandardsIgnoreStart
+        $contents = @php_strip_whitespace($path);
+        // @codingStandardsIgnoreEnd
+        if (!$contents) {
+            if (!file_exists($path)) {
+                $message = 'File at "%s" does not exist, check your classmap definitions';
+            } elseif (!is_readable($path)) {
+                $message = 'File at "%s" is not readable, check its permissions';
+            } elseif ('' === trim(file_get_contents($path))) {
+                // The input file was really empty and thus contains no classes
+                return array();
+            } else {
+                $message = 'File at "%s" could not be parsed as PHP, it may be binary or corrupted';
             }
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Could not scan for classes inside '.$path.": \n".$e->getMessage(), 0, $e);
+            $error = error_get_last();
+            if (isset($error['message'])) {
+                $message .= PHP_EOL . 'The following message may be helpful:' . PHP_EOL . $error['message'];
+            }
+            throw new \RuntimeException(sprintf($message, $path));
         }
 
         // return early if there is no chance of matching anything in this file
-        if (!preg_match('{\b(?:class|interface'.$traits.')\s}i', $contents)) {
+        if (!preg_match('{\b(?:class|interface'.$extraTypes.')\s}i', $contents)) {
             return array();
         }
 
@@ -186,7 +194,11 @@ class ClassMapGenerator
             $contents
         );
         // strip strings
-        $contents = preg_replace('{"[^"\\\\]*(\\\\.[^"\\\\]*)*"|\'[^\'\\\\]*(\\\\.[^\'\\\\]*)*\'}s', 'null', $contents);
+        $contents = preg_replace(
+            '{"[^"\\\\]*+(\\\\.[^"\\\\]*+)*+"|\'[^\'\\\\]*+(\\\\.[^\'\\\\]*+)*+\'}s',
+            'null',
+            $contents
+        );
         // strip leading non-php code if needed
         if (substr($contents, 0, 2) !== '<?') {
             $contents = preg_replace('{^.+?<\?}s', '<?', $contents, 1, $replacements);
@@ -205,7 +217,7 @@ class ClassMapGenerator
         preg_match_all(
             '{
             (?:
-                 \b(?<![\$:>])(?P<type>class|interface' . $traits .
+                 \b(?<![\$:>])(?P<type>class|interface' . $extraTypes .
             ') \s+ (?P<name>[a-zA-Z_\x7f-\xff:][a-zA-Z0-9_\x7f-\xff:\-]*)
                | \b(?<![\$:>])(?P<ns>namespace) (?P<nsname>\s+[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*' .
             '(?:\s*\\\\\s*[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)*)? \s*[\{;]
@@ -223,9 +235,19 @@ class ClassMapGenerator
                 $namespace = str_replace(array(' ', "\t", "\r", "\n"), '', $matches['nsname'][$i]) . '\\';
             } else {
                 $name = $matches['name'][$i];
+                // skip anon classes extending/implementing
+                if ($name === 'extends' || $name === 'implements') {
+                    continue;
+                }
                 if ($name[0] === ':') {
                     // This is an XHP class, https://github.com/facebook/xhp
                     $name = 'xhp'.substr(str_replace(array('-', ':'), array('_', '__'), $name), 1);
+                } elseif ($matches['type'][$i] === 'enum') {
+                    // In Hack, something like:
+                    // enum Foo: int { HERP = '123'; }
+                    // The regex above captures the colon, which isn't part of
+                    // the class name.
+                    $name = rtrim($name, ':');
                 }
                 $classes[] = ltrim($namespace . $name, '\\');
             }
