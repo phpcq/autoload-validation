@@ -8,11 +8,4 @@
 -->
 <project name="phpcq/autoload-validation" default="build">
     <import file="vendor/phpcq/phpcq/phpcq.main.xml" />
-
-    <!-- we have to override the command as otherwise phpcq won't find it. We are the root repository. -->
-    <target name="autoload-validation">
-        <exec dir="${basedir}" executable="bin/check-autoloading.php" failonerror="true" taskname="check-autoloading">
-            <arg line="${basedir}"/>
-        </exec>
-    </target>
 </project>
