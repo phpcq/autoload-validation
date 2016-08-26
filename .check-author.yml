@@ -1,5 +1,6 @@
 exclude:
-  languages
+  - languages
+  - tests/fixtures
 
 copy-left:
   "Gyula Sallai <salla016@gmail.com>": "src/ClassMapGenerator.php"
