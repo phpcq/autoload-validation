@@ -29,6 +29,23 @@ use Symfony\Component\Finder\Finder;
 class ClassMapGenerator
 {
     /**
+     * A list of regexes to exclude files.
+     *
+     * @var string[]
+     */
+    private $blackListRegex = array();
+
+    /**
+     * Create a new instance.
+     *
+     * @param \string[] $blackListRegex A list of regexes to exclude files.
+     */
+    public function __construct(array $blackListRegex = array())
+    {
+        $this->blackListRegex = $blackListRegex;
+    }
+
+    /**
      * Iterate over all files in the given directory searching for classes.
      *
      * @param \Iterator|string $path      The path to search in or an iterator.
@@ -48,24 +65,26 @@ class ClassMapGenerator
      */
     public function scan($path, $whitelist = null, $namespace = null, &$messages = null)
     {
-        return static::createMap($path, $whitelist, $namespace, $messages);
+        return static::createMap($path, $whitelist, $namespace, $messages, $this->blackListRegex);
     }
 
     /**
      * Generate a class map file.
      *
-     * @param \Traversable $dirs Directories or a single path to search in.
+     * @param \Traversable $dirs      Directories or a single path to search in.
      *
-     * @param string       $file The name of the class map file.
+     * @param string       $file      The name of the class map file.
+     *
+     * @param string[]     $blackList Optional list of blacklist regex for files to exclude.
      *
      * @return void
      */
-    public static function dump($dirs, $file)
+    public static function dump($dirs, $file, $blackList = null)
     {
         $maps = array();
 
         foreach ($dirs as $dir) {
-            $maps = array_merge($maps, static::createMap($dir));
+            $maps = array_merge($maps, static::createMap($dir, null, null, $blackList));
         }
 
         file_put_contents($file, sprintf('<?php return %s;', var_export($maps, true)));
@@ -82,6 +101,8 @@ class ClassMapGenerator
      *
      * @param string[]         $messages  The error message list to which errors shall be appended to.
      *
+     * @param string[]         $blackList Optional list of blacklist regex for files to exclude.
+     *
      * @return array A class map array
      *
      * @throws \RuntimeException When the path could not be scanned.
@@ -89,7 +110,7 @@ class ClassMapGenerator
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      */
-    public static function createMap($path, $whitelist = null, $namespace = null, &$messages = null)
+    public static function createMap($path, $whitelist = null, $namespace = null, &$messages = null, $blackList = null)
     {
         if (is_string($path)) {
             if (is_file($path)) {
@@ -108,6 +129,10 @@ class ClassMapGenerator
 
         foreach ($path as $file) {
             $filePath = $file->getRealPath();
+
+            if ($blackList && self::pathMatchesRegex($filePath, $blackList)) {
+                continue;
+            }
 
             if (!in_array(pathinfo($filePath, PATHINFO_EXTENSION), array('php', 'inc', 'hh'))) {
                 continue;
@@ -141,6 +166,25 @@ class ClassMapGenerator
     }
 
     /**
+     * Test path against blacklist regex list.
+     *
+     * @param string   $path      The path to check.
+     *
+     * @param string[] $blackList List of blacklist regexes.
+     *
+     * @return bool
+     */
+    private static function pathMatchesRegex($path, $blackList)
+    {
+        foreach ($blackList as $item) {
+            $match = '#' . strtr('#', '\#', $item) . '#';
+            if (preg_match($match, $path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /**
      * Extract the classes in the given file.

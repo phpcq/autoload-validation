@@ -101,6 +101,12 @@ EOF
                 'd',
                 InputOption::VALUE_NONE,
                 'Path this to disable the now deprecated auto loader hacks of Version 1.0 to probe for Contao classes.'
+            )
+            ->addOption(
+                'ignore-files',
+                'i',
+                (InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY),
+                'Regex for filename to ignore.'
             );
     }
 
@@ -136,7 +142,8 @@ EOF
 
         $report   = $this->prepareReport($input, $logger);
         $composer = json_decode(file_get_contents($composerJson), true);
-        $factory  = new AutoloadValidatorFactory($rootDir, new ClassMapGenerator(), $report);
+        $ignore   = $input->getOption('ignore-files');
+        $factory  = new AutoloadValidatorFactory($rootDir, new ClassMapGenerator($ignore), $report);
         $test     = new AutoloadValidator($factory->createFromComposerJson($composer), $report);
         $test->validate();
         if ($report->hasError()) {
