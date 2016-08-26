@@ -177,7 +177,7 @@ class ClassMapGenerator
     private static function pathMatchesRegex($path, $blackList)
     {
         foreach ($blackList as $item) {
-            $match = '#' . strtr('#', '\#', $item) . '#';
+            $match = '#' . strtr($item, '#', '\#') . '#';
             if (preg_match($match, $path)) {
                 return true;
             }
