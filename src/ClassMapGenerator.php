@@ -200,10 +200,7 @@ class ClassMapGenerator
      */
     private static function findClasses($path)
     {
-        $extraTypes = PHP_VERSION_ID < 50400 ? '' : '|trait';
-        if (defined('HHVM_VERSION') && version_compare(HHVM_VERSION, '3.3', '>=')) {
-            $extraTypes .= '|enum';
-        }
+        $extraTypes = self::determineExtraTypes();
 
         // @codingStandardsIgnoreStart
         $contents = @php_strip_whitespace($path);
@@ -263,6 +260,23 @@ class ClassMapGenerator
         }
 
         return $classes;
+    }
+
+    /**
+     * Determine the extra types we can use depending on the used PHP interpreter.
+     *
+     * @return string
+     */
+    private static function determineExtraTypes()
+    {
+        $extraTypes = PHP_VERSION_ID < 50400 ? '' : '|trait';
+        if (defined('HHVM_VERSION') && version_compare(HHVM_VERSION, '3.3', '>=')) {
+            $extraTypes .= '|enum';
+
+            return $extraTypes;
+        }
+
+        return $extraTypes;
     }
 
     /**
