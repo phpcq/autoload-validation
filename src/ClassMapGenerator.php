@@ -194,9 +194,6 @@ class ClassMapGenerator
      * @throws \RuntimeException When the file does not exist or is not accessible.
      *
      * @return array The found classes.
-     *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     private static function findClasses($path)
     {
@@ -229,35 +226,7 @@ class ClassMapGenerator
         }
 
         $matches = self::extractClasses($contents, $extraTypes);
-        if (array() === $matches) {
-            return array();
-        }
-
-        $classes   = array();
-        $namespace = '';
-
-        for ($i = 0, $len = count($matches['type']); $i < $len; $i++) {
-            if (!empty($matches['ns'][$i])) {
-                $namespace = str_replace(array(' ', "\t", "\r", "\n"), '', $matches['nsname'][$i]) . '\\';
-            } else {
-                $name = $matches['name'][$i];
-                // skip anon classes extending/implementing
-                if ($name === 'extends' || $name === 'implements') {
-                    continue;
-                }
-                if ($name[0] === ':') {
-                    // This is an XHP class, https://github.com/facebook/xhp
-                    $name = 'xhp'.substr(str_replace(array('-', ':'), array('_', '__'), $name), 1);
-                } elseif ($matches['type'][$i] === 'enum') {
-                    // In Hack, something like:
-                    // enum Foo: int { HERP = '123'; }
-                    // The regex above captures the colon, which isn't part of
-                    // the class name.
-                    $name = rtrim($name, ':');
-                }
-                $classes[] = ltrim($namespace . $name, '\\');
-            }
-        }
+        $classes = self::buildClassList($matches);
 
         return $classes;
     }
@@ -331,5 +300,47 @@ class ClassMapGenerator
         );
 
         return $matches;
+    }
+
+    /**
+     * Build the class list from the passed matches.
+     *
+     * @param array $matches The matches from extractClasses().
+     *
+     * @return array
+     */
+    private static function buildClassList($matches)
+    {
+        if (array() === $matches) {
+            return array();
+        }
+
+        $classes   = array();
+        $namespace = '';
+
+        for ($i = 0, $len = count($matches['type']); $i < $len; $i++) {
+            if (!empty($matches['ns'][$i])) {
+                $namespace = str_replace(array(' ', "\t", "\r", "\n"), '', $matches['nsname'][$i]) . '\\';
+            } else {
+                $name = $matches['name'][$i];
+                // skip anon classes extending/implementing
+                if ($name === 'extends' || $name === 'implements') {
+                    continue;
+                }
+                if ($name[0] === ':') {
+                    // This is an XHP class, https://github.com/facebook/xhp
+                    $name = 'xhp' . substr(str_replace(array('-', ':'), array('_', '__'), $name), 1);
+                } elseif ($matches['type'][$i] === 'enum') {
+                    // In Hack, something like:
+                    // enum Foo: int { HERP = '123'; }
+                    // The regex above captures the colon, which isn't part of
+                    // the class name.
+                    $name = rtrim($name, ':');
+                }
+                $classes[] = ltrim($namespace . $name, '\\');
+            }
+        }
+
+        return $classes;
     }
 }
