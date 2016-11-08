@@ -21,6 +21,7 @@
 namespace PhpCodeQuality\AutoloadValidation\ClassLoader;
 
 use PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException;
+use PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException;
 use PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException;
 
 /**
@@ -66,6 +67,8 @@ class EnumeratingClassLoader
      */
     public function loadClass($class)
     {
+        $this->checkClassName($class);
+
         if (empty($this->loading)) {
             $this->loading = $class;
         }
@@ -170,6 +173,7 @@ class EnumeratingClassLoader
     {
         // Just to make sure we have them loaded.
         spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException');
+        spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException');
         spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException');
 
         $this->previousLoaders = spl_autoload_functions();
@@ -192,5 +196,31 @@ class EnumeratingClassLoader
         }
 
         spl_autoload_unregister(array($this, 'loadClass'));
+    }
+
+    /**
+     * Check the class name.
+     *
+     * @param string $class The class name.
+     *
+     * @return void
+     *
+     * @throws InvalidClassNameException When the class name is invalid.
+     */
+    private function checkClassName($class)
+    {
+        static $forbiddenClasses = array(
+            '7.0' => array('tni', 'regetni', 'taolf', 'gnirts', 'loob', 'naeloob')
+        );
+
+        $match = strrev(strtolower($class));
+
+        foreach ($forbiddenClasses as $since => $forbidden) {
+            foreach ($forbidden as $forbiddenClass) {
+                if (0 === strncmp($forbiddenClass, $match, strlen($forbiddenClass))) {
+                    throw new InvalidClassNameException($class, $since);
+                }
+            }
+        }
     }
 }

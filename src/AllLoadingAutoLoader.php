@@ -23,6 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
 use PhpCodeQuality\AutoloadValidation\ClassLoader\EnumeratingClassLoader;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException;
+use PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException;
 use PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException;
 use Psr\Log\LoggerInterface;
 
@@ -184,6 +185,11 @@ class AllLoadingAutoLoader
             $this->logger->error(
                 'The autoloader could not load {class} (should be located in file {file}).',
                 array('class' => $className, 'file' => $file)
+            );
+        } catch (InvalidClassNameException $exception) {
+            $this->logger->warning(
+                'Skipped loading of {class}, it is a reserved name since {php-version} (file {file}).',
+                array('class' => $className, 'file' => $file, 'php-version' => $exception->getPhpVersion())
             );
         } catch (\ErrorException $exception) {
             $this->logger->error(
