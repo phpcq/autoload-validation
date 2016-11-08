@@ -142,7 +142,7 @@ EOF
 
         $report   = $this->prepareReport($input, $logger);
         $composer = json_decode(file_get_contents($composerJson), true);
-        $ignore   = $input->getOption('ignore-files');
+        $ignore   = $this->getIgnoredFiles($composer, $input->getOption('ignore-files'));
         $factory  = new AutoloadValidatorFactory($rootDir, new ClassMapGenerator($ignore), $report);
         $test     = new AutoloadValidator($factory->createFromComposerJson($composer), $report);
         $test->validate();
@@ -269,5 +269,28 @@ EOF
     private function includeIfExists($file)
     {
         return file_exists($file) ? include $file : false;
+    }
+
+    /**
+     * Retrieve the list of ignored files.
+     *
+     * @param array    $composer The composer.json content.
+     * @param string[] $fileList The list of additionally ignored files.
+     *
+     * @return string[]
+     */
+    private function getIgnoredFiles($composer, $fileList)
+    {
+        $ignored = $fileList;
+
+        foreach (array('autoload', 'autoload-dev') as $sectionName) {
+            if (array_key_exists($sectionName, $composer)) {
+                if (array_key_exists('exclude-from-classmap', $composer[$sectionName])) {
+                    $ignored = array_merge($ignored, $composer[$sectionName]['exclude-from-classmap']);
+                }
+            }
+        }
+
+        return $ignored;
     }
 }
