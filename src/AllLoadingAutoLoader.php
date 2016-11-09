@@ -22,6 +22,7 @@ namespace PhpCodeQuality\AutoloadValidation;
 
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
 use PhpCodeQuality\AutoloadValidation\ClassLoader\EnumeratingClassLoader;
+use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException;
 use PhpCodeQuality\AutoloadValidation\Exception\DeprecatedClassException;
 use PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException;
@@ -184,6 +185,11 @@ class AllLoadingAutoLoader
         } catch (ClassNotFoundException $exception) {
             $this->logger->error(
                 'The autoloader could not load {class} (should be located in file {file}).',
+                array('class' => $className, 'file' => $file)
+            );
+        } catch (ClassAlreadyRegisteredException $exception) {
+            $this->logger->error(
+                '{class} is already loaded from file {realfile}, can not test loading from file {file}.',
                 array('class' => $className, 'file' => $file)
             );
         } catch (InvalidClassNameException $exception) {

@@ -20,6 +20,7 @@
 
 namespace PhpCodeQuality\AutoloadValidation\ClassLoader;
 
+use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException;
 use PhpCodeQuality\AutoloadValidation\Exception\DeprecatedClassException;
 use PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException;
@@ -187,6 +188,7 @@ class EnumeratingClassLoader
     public function register($prepend = false)
     {
         // Just to make sure we have them loaded.
+        spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException');
         spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException');
         spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\DeprecatedClassException');
         spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException');
@@ -224,6 +226,8 @@ class EnumeratingClassLoader
      * @param string   $loaderName The internal name of the loader.
      *
      * @return null|string
+     *
+     * @throws ClassAlreadyRegisteredException When the class has been registered before.
      */
     private function tryLoad($loader, $class, $loaderName)
     {
@@ -232,8 +236,7 @@ class EnumeratingClassLoader
         }
 
         if ($this->isLoaded($class)) {
-            trigger_error('class was previously loaded - can not determine loader', E_USER_WARNING);
-            return 'unknown';
+            throw new ClassAlreadyRegisteredException($class, $this->getFileDeclaringClass($class));
         }
 
         if (call_user_func($loader, $class)) {
