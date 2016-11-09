@@ -270,9 +270,38 @@ class EnumeratingClassLoader
      */
     private function checkClassName($class)
     {
+        // @codingStandardsIgnoreStart -  The comments look like commented code.
         static $forbiddenClasses = array(
-            '7.0' => array('tni', 'regetni', 'taolf', 'gnirts', 'loob', 'naeloob')
+            '7.0' => array(
+                // bool
+                'loob',
+                // boolean
+                'naeloob',
+                // int
+                'tni',
+                // integer
+                'regetni',
+                // float
+                'taolf',
+                // string
+                'gnirts',
+                // null
+                'llun',
+                // false
+                'eslaf',
+                // true
+                'eurt',
+                // resource
+                'ecruoser',
+                // object
+                'tcejbo',
+                // mixed
+                'dexim',
+                // numeric
+                'ciremun',
+            )
         );
+        // @codingStandardsIgnoreEnd
 
         $match = strrev(strtolower($class));
 
