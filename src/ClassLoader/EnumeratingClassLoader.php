@@ -21,6 +21,7 @@
 namespace PhpCodeQuality\AutoloadValidation\ClassLoader;
 
 use PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException;
+use PhpCodeQuality\AutoloadValidation\Exception\DeprecatedClassException;
 use PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException;
 use PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException;
 
@@ -71,6 +72,8 @@ class EnumeratingClassLoader
      * @throws ClassNotFoundException When a class could not be found.
      *
      * @throws ParentClassNotFoundException When a parent class could not be found.
+     *
+     * @throws DeprecatedClassException When a class raised a deprecation error.
      */
     public function loadClass($class)
     {
@@ -87,6 +90,9 @@ class EnumeratingClassLoader
                     }
                 } catch (\ErrorException $exception) {
                     $this->loading = null;
+                    if (E_USER_DEPRECATED === $exception->getSeverity()) {
+                        throw new DeprecatedClassException($class, $exception->getMessage(), 0, $exception);
+                    }
                     throw $exception;
                 }
             }
@@ -182,6 +188,7 @@ class EnumeratingClassLoader
     {
         // Just to make sure we have them loaded.
         spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException');
+        spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\DeprecatedClassException');
         spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException');
         spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException');
 

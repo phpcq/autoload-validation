@@ -23,6 +23,7 @@ namespace PhpCodeQuality\AutoloadValidation;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
 use PhpCodeQuality\AutoloadValidation\ClassLoader\EnumeratingClassLoader;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException;
+use PhpCodeQuality\AutoloadValidation\Exception\DeprecatedClassException;
 use PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException;
 use PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException;
 use Psr\Log\LoggerInterface;
@@ -169,6 +170,14 @@ class AllLoadingAutoLoader
 
         try {
             $this->loader->loadClass($className);
+            $this->checkDeclaringFile($className, $file);
+
+            return true;
+        } catch (DeprecatedClassException $exception) {
+            $this->logger->warning(
+                '{class} triggered deprecation: {message} (file {file}).',
+                array('class' => $className, 'file' => $file, 'message' => $exception->getDeprecationMessage())
+            );
             $this->checkDeclaringFile($className, $file);
 
             return true;
