@@ -169,16 +169,7 @@ class AllLoadingAutoLoader
 
         try {
             $this->loader->loadClass($className);
-            if (!$this->loader->isClassFromFile($className, $file)) {
-                $this->logger->warning(
-                    '{class} was loaded from {realFile} (should be located in file {file}).',
-                    array(
-                        'class' => $className,
-                        'file' => $file,
-                        'realFile' => $this->loader->getFileDeclaringClass($className)
-                    )
-                );
-            }
+            $this->checkDeclaringFile($className, $file);
 
             return true;
         } catch (ClassNotFoundException $exception) {
@@ -213,5 +204,28 @@ class AllLoadingAutoLoader
         return (class_exists($className, false)
             || interface_exists($className, false)
             || (function_exists('trait_exists') && trait_exists($className, false)));
+    }
+
+    /**
+     * Check that the file declaring the class matches the one we expect.
+     *
+     * @param string $className The class name.
+     *
+     * @param string $file      The expected file.
+     *
+     * @return void
+     */
+    private function checkDeclaringFile($className, $file)
+    {
+        if (true !== ($realFile = $this->loader->isClassFromFile($className, $file))) {
+            $this->logger->warning(
+                '{class} was loaded from {realFile} (should be located in file {file}).',
+                array(
+                    'class'    => $className,
+                    'file'     => $file,
+                    'realFile' => $realFile
+                )
+            );
+        }
     }
 }
