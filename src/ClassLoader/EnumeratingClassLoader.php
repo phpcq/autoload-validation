@@ -55,6 +55,13 @@ class EnumeratingClassLoader
     private $previousLoaders;
 
     /**
+     * The list of loaded classes.
+     *
+     * @var string[]
+     */
+    private $loadList;
+
+    /**
      * Loads the given class/interface/trait.
      *
      * @param string $class The name of the class to load.
@@ -74,11 +81,13 @@ class EnumeratingClassLoader
         }
         try {
             foreach ($this->loaders as $name => $loader) {
-                if (call_user_func($loader, $class)) {
-                    if ($class === $this->loading) {
-                        $this->loading = null;
+                try {
+                    if ($loaderName = $this->tryLoad($loader, $class, $name)) {
+                        return $loaderName;
                     }
-                    return $name;
+                } catch (\ErrorException $exception) {
+                    $this->loading = null;
+                    throw $exception;
                 }
             }
         } catch (ParentClassNotFoundException $exception) {
@@ -196,6 +205,44 @@ class EnumeratingClassLoader
         }
 
         spl_autoload_unregister(array($this, 'loadClass'));
+    }
+
+    /**
+     * Try to load the class.
+     *
+     * @param callable $loader     The loader to use.
+     *
+     * @param string   $class      The class name.
+     *
+     * @param string   $loaderName The internal name of the loader.
+     *
+     * @return null|string
+     */
+    private function tryLoad($loader, $class, $loaderName)
+    {
+        if (isset($this->loadList[$class])) {
+            return $this->loadList[$class];
+        }
+
+        if ($this->isLoaded($class)) {
+            trigger_error('class was previously loaded - can not determine loader', E_USER_WARNING);
+            return 'unknown';
+        }
+
+        if (call_user_func($loader, $class)) {
+            if ($class === $this->loading) {
+                $this->loading = null;
+            }
+
+            return $this->loadList[$class] = $loaderName;
+        }
+
+        if ($this->isLoaded($class)) {
+            trigger_error('loader ' . $loaderName . ' did not return true');
+            return $this->loadList[$class] = $loaderName;
+        }
+
+        return null;
     }
 
     /**
