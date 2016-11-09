@@ -154,6 +154,10 @@ class EnumeratingClassLoader
      */
     public function getFileDeclaringClass($className)
     {
+        if (!$this->isLoaded($className)) {
+            return '';
+        }
+
         $reflector = new \ReflectionClass($className);
         $realFile  = $reflector->getFileName();
 
