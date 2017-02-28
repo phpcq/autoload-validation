@@ -106,7 +106,7 @@ class HackPreparator
         $this->enumLoader->add(function ($class) use ($logger) {
             if (substr($class, 0, 7) !== 'Contao\\') {
                 try {
-                    spl_autoload_call('Contao\\' . $class);
+                    class_exists('Contao\\' . $class);
                 } catch (ParentClassNotFoundException $exception) {
                     return null;
                 }
