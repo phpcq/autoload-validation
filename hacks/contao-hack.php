@@ -12,7 +12,8 @@
  *
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     David Molineus <david.molineus@netzmacht.de>
+ * @copyright  2014-2018 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -51,6 +52,12 @@ spl_autoload_register(
             return null;
         }
         try {
+            if (!class_exists('Contao\\' . $class, false)
+                && !trait_exists('Contao\\' . $class, false)
+                && !interface_exists('Contao\\' . $class, false)
+            ) {
+                spl_autoload_call('Contao\\' . $class);
+            }
             spl_autoload_call('Contao\\' . $class);
         } catch (ParentClassNotFoundException $exception) {
             return null;
