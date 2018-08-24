@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2014 Christian Schiffler, Tristan Lins
+ * (c) 2018 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,8 @@
  *
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
+ * @copyright  2014-2018 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -21,12 +22,13 @@
 namespace PhpCodeQuality\AutoloadValidation\Test\Report\Destination;
 
 use PhpCodeQuality\AutoloadValidation\Report\Destination\PsrLogDestination;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
 
 /**
  * This class tests the Report class.
  */
-class PsrLogDestinationTest extends \PHPUnit_Framework_TestCase
+class PsrLogDestinationTest extends TestCase
 {
     /**
      * Test that the class can be instantiated.

@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2014 Christian Schiffler, Tristan Lins
+ * (c) 2018 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,6 +12,7 @@
  *
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
  * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
@@ -22,11 +23,12 @@ namespace PhpCodeQuality\AutoloadValidation\Test\Report;
 
 use PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface;
 use PhpCodeQuality\AutoloadValidation\Report\Report;
+use PHPUnit\Framework\TestCase;
 
 /**
  * This class tests the Report class.
  */
-class ReportTest extends \PHPUnit_Framework_TestCase
+class ReportTest extends TestCase
 {
     /**
      * Test that the report can be created with valid arguments.
