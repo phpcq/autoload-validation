@@ -243,6 +243,7 @@ class ClassMapGeneratorTest extends TestCase
         }
 
         ClassMapGenerator::createMap($tempDir);
+        $this->addToAssertionCount(1);
 
         $filesystem = new Filesystem();
         $filesystem->remove($tempDir);
@@ -265,21 +266,21 @@ class ClassMapGeneratorTest extends TestCase
     /**
      * Assert that the passed values are equal after normalization.
      *
-     * @param string[]    $expected Expected value.
+     * @param string[] $expected Expected value.
      *
-     * @param string[]    $actual   Actual value.
+     * @param string[] $actual   Actual value.
      *
-     * @param null|string $message  Optional message.
+     * @param string   $message  Optional message.
      *
      * @return void
      */
-    protected function assertEqualsNormalized($expected, $actual, $message = null)
+    protected function assertEqualsNormalized($expected, $actual, $message = '')
     {
         foreach ($expected as $ns => $path) {
-            $expected[$ns] = strtr($path, '\\', '/');
+            $expected[$ns] = str_replace('\\', '/', $path);
         }
         foreach ($actual as $ns => $path) {
-            $actual[$ns] = strtr($path, '\\', '/');
+            $actual[$ns] = str_replace('\\', '/', $path);
         }
         $this->assertEquals($expected, $actual, $message);
     }
