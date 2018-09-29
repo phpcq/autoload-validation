@@ -94,6 +94,7 @@ class ClassMapTest extends TestCase
         $classMap = new ClassMap();
         $classMap->add('Some\Class', '/some/path');
         $classMap->add('Some\Class', '/some/path');
+        $this->addToAssertionCount(1);
     }
 
     /**
