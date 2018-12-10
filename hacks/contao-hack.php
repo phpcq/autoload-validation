@@ -58,7 +58,6 @@ spl_autoload_register(
             ) {
                 spl_autoload_call('Contao\\' . $class);
             }
-            spl_autoload_call('Contao\\' . $class);
         } catch (ParentClassNotFoundException $exception) {
             return null;
         }
