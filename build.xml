@@ -8,4 +8,5 @@
 -->
 <project name="phpcq/autoload-validation" default="build">
     <import file="vendor/phpcq/phpcq/phpcq.main.xml" />
+    <target name="phpspec" />
 </project>
