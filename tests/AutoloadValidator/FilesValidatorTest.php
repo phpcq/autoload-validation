@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2014 Christian Schiffler, Tristan Lins
+ * (c) 2014-2020 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,8 @@
  *
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -21,9 +22,13 @@
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\FilesValidator;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator;
+use PhpCodeQuality\AutoloadValidation\Violation\Files\FileNotFoundViolation;
 
 /**
  * This class tests the FilesValidator.
+ *
+ * @covers \PhpCodeQuality\AutoloadValidation\AutoloadValidator\FilesValidator
  *
  * @runInSeparateProcess
  */
@@ -38,13 +43,13 @@ class FilesValidatorTest extends ValidatorTestCase
     {
         $validator = new FilesValidator(
             'autoload.files',
-            array('/src'),
+            ['/src'],
             '/some/dir',
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
 
-        $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator', $validator);
+        self::assertInstanceOf(AbstractValidator::class, $validator);
     }
 
     /**
@@ -54,19 +59,19 @@ class FilesValidatorTest extends ValidatorTestCase
      */
     public function testAddToLoader()
     {
-        $fixture = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'files_loader.php';
+        $fixture = \dirname(__DIR__) . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'files_loader.php';
 
         $validator = new FilesValidator(
             'autoload.files',
-            array(basename($fixture)),
-            dirname($fixture),
+            [\basename($fixture)],
+            \dirname($fixture),
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
 
         $loaders = $validator->getLoader();
 
-        $this->assertInstanceOf('Closure', $loaders);
+        self::assertInstanceOf('Closure', $loaders);
     }
 
     /**
@@ -78,7 +83,7 @@ class FilesValidatorTest extends ValidatorTestCase
     {
         $validator = new FilesValidator(
             'autoload.files',
-            array(basename(__FILE__)),
+            array(\basename(__FILE__)),
             __DIR__,
             $this->mockClassMapGenerator(),
             $this->mockReport()
@@ -96,15 +101,15 @@ class FilesValidatorTest extends ValidatorTestCase
     {
         $validator = new FilesValidator(
             'autoload.files',
-            array('does/not/exist'),
+            ['does/not/exist'],
             __DIR__,
             $this->mockClassMapGenerator(),
             $this->mockReport(
-                'PhpCodeQuality\AutoloadValidation\Violation\Files\FileNotFoundViolation',
-                array(
+                FileNotFoundViolation::class,
+                [
                     'fileEntry'     => 'does/not/exist',
                     'validatorName' => 'autoload.files'
-                )
+                ]
             )
         );
 

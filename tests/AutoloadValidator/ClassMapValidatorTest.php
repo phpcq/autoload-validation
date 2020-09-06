@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2014 Christian Schiffler, Tristan Lins
+ * (c) 2014-2020 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,8 @@
  *
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -21,9 +22,14 @@
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMapValidator;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator;
+use Composer\Autoload\ClassLoader;
+use PhpCodeQuality\AutoloadValidation\Violation\ClassMap\NoClassesFoundInPathViolation;
 
 /**
  * This class tests the ClassMapValidator.
+ *
+ * @covers \PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMapValidator
  */
 class ClassMapValidatorTest extends ValidatorTestCase
 {
@@ -42,7 +48,7 @@ class ClassMapValidatorTest extends ValidatorTestCase
             $this->mockReport()
         );
 
-        $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator', $validator);
+        self::assertInstanceOf(AbstractValidator::class, $validator);
     }
 
     /**
@@ -67,12 +73,12 @@ class ClassMapValidatorTest extends ValidatorTestCase
 
 
         $loader = $validator->getLoader();
-        $this->assertInstanceOf('Composer\Autoload\ClassLoader', $loader[0]);
-        $this->assertEquals(
-            array(
+        self::assertInstanceOf(ClassLoader::class, $loader[0]);
+        self::assertEquals(
+            [
                 'Vendor\Namespace\ClassName1' => '/some/dir/src/ClassName1.php',
                 'Vendor\Namespace\ClassName2' => '/some/dir/another/dir/ClassName.php'
-            ),
+            ],
             $loader[0]->getClassMap()
         );
     }
@@ -86,22 +92,22 @@ class ClassMapValidatorTest extends ValidatorTestCase
     {
         $generator = $this->mockClassMapGenerator();
         $generator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('scan')
             ->with('/some/dir/src', null)
-            ->willReturn(array());
+            ->willReturn([]);
 
         $validator = new ClassMapValidator(
             'autoload.classmap',
-            array('/src'),
+            ['/src'],
             '/some/dir',
             $generator,
             $this->mockReport(
-                'PhpCodeQuality\AutoloadValidation\Violation\ClassMap\NoClassesFoundInPathViolation',
-                array(
+                NoClassesFoundInPathViolation::class,
+                [
                     'classMapPrefix' => '/src',
                     'validatorName'  => 'autoload.classmap'
-                )
+                ]
             )
         );
 
@@ -118,20 +124,20 @@ class ClassMapValidatorTest extends ValidatorTestCase
         $generator = $this->mockClassMapGenerator();
         $generator->method('scan')
             ->withConsecutive(
-                array('/some/dir/src'),
-                array('/some/dir/another/dir')
+                ['/some/dir/src'],
+                ['/some/dir/another/dir']
             )
             ->willReturnOnConsecutiveCalls(
-                array('Vendor\Namespace\ClassName1' => '/some/dir/src/ClassName1.php'),
-                array('Vendor\Namespace\ClassName2' => '/some/dir/another/dir/ClassName.php')
+                ['Vendor\Namespace\ClassName1' => '/some/dir/src/ClassName1.php'],
+                ['Vendor\Namespace\ClassName2' => '/some/dir/another/dir/ClassName.php']
             );
 
         $validator = new ClassMapValidator(
             'autoload.classmap',
-            array(
+            [
                 '/src',
                 '/another/dir'
-            ),
+            ],
             '/some/dir',
             $generator,
             $this->mockReport()
@@ -141,12 +147,12 @@ class ClassMapValidatorTest extends ValidatorTestCase
 
         $resultingClassMap = $validator->getClassMap();
 
-        $this->assertEquals(
-            array(
+        self::assertEquals(
+            [
                 'Vendor\Namespace\ClassName1' => '/some/dir/src/ClassName1.php',
                 'Vendor\Namespace\ClassName2' => '/some/dir/another/dir/ClassName.php'
-            ),
-            iterator_to_array($resultingClassMap)
+            ],
+            \iterator_to_array($resultingClassMap)
         );
     }
 }

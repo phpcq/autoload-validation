@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2018 Christian Schiffler, Tristan Lins
+ * (c) 2014-2020 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,7 @@
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2014-2018 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -25,9 +25,13 @@ use PhpCodeQuality\AutoloadValidation\AutoloadValidator;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ValidatorInterface;
 use PhpCodeQuality\AutoloadValidation\Violation\ClassAddedMoreThanOnceViolation;
 use PHPUnit\Framework\TestCase;
+use PhpCodeQuality\AutoloadValidation\Report\Report;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
 
 /**
  * This class tests the AutoloadValidator
+ *
+ * @covers \PhpCodeQuality\AutoloadValidation\AutoloadValidator
  */
 class AutoloadValidatorTest extends TestCase
 {
@@ -38,7 +42,7 @@ class AutoloadValidatorTest extends TestCase
      */
     private function getMockValidator()
     {
-        return $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\AutoloadValidator\ValidatorInterface');
+        return $this->getMockForAbstractClass(ValidatorInterface::class);
     }
 
     /**
@@ -48,44 +52,40 @@ class AutoloadValidatorTest extends TestCase
      */
     public function testCreation()
     {
-        $report = $this
-            ->getMockBuilder('PhpCodeQuality\AutoloadValidation\Report\Report')
-            ->disableOriginalConstructor()
-            ->getMock();
+        $report = $this->getMockBuilder(Report::class)->disableOriginalConstructor()->getMock();
 
         $validator = new AutoloadValidator(
-            array(
+            [
                 $this->getMockValidator(),
                 $this->getMockValidator(),
                 $this->getMockValidator(),
-            ),
+            ],
             $report
         );
-        $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator', $validator);
+        self::assertInstanceOf(AutoloadValidator::class, $validator);
     }
 
     /**
      * Test that the class raises an exception when invalid validators are feeded.
      *
      * @return void
-     *
-     * @expectedException \InvalidArgumentException
-     *
-     * @expectedExceptionMessage Invalid validator: DateTime
      */
     public function testCreationRaisesExceptionForInvalidValidators()
     {
-        $report = $this
-            ->getMockBuilder('PhpCodeQuality\AutoloadValidation\Report\Report')
-            ->disableOriginalConstructor()
-            ->getMock();
+        if (70000 < PHP_VERSION_ID) {
+            $this->expectException(\InvalidArgumentException::class);
+        } else {
+            $this->setExpectedException(\InvalidArgumentException::class);
+        }
+
+        $report = $this->getMockBuilder(Report::class)->disableOriginalConstructor()->getMock();
 
         new AutoloadValidator(
-            array(
+            [
                 $this->getMockValidator(),
                 new \DateTime(),
                 $this->getMockValidator(),
-            ),
+            ],
             $report
         );
     }
@@ -97,19 +97,16 @@ class AutoloadValidatorTest extends TestCase
      */
     public function testValidation()
     {
-        $report = $this
-            ->getMockBuilder('PhpCodeQuality\AutoloadValidation\Report\Report')
-            ->disableOriginalConstructor()
-            ->getMock();
+        $report = $this->getMockBuilder(Report::class)->disableOriginalConstructor()->getMock();
 
-        $validators = array(
+        $validators = [
             $this->getMockValidator(),
             $this->getMockValidator(),
             $this->getMockValidator(),
-        );
+        ];
 
         foreach ($validators as $validator) {
-            $validator->expects($this->once())->method('validate');
+            $validator->expects(self::once())->method('validate');
         }
 
         $validator = new AutoloadValidator($validators, $report);
@@ -123,29 +120,26 @@ class AutoloadValidatorTest extends TestCase
      */
     public function testGetLoader()
     {
-        $report = $this
-            ->getMockBuilder('PhpCodeQuality\AutoloadValidation\Report\Report')
-            ->disableOriginalConstructor()
-            ->getMock();
+        $report = $this->getMockBuilder(Report::class)->disableOriginalConstructor()->getMock();
 
-        $validators = array(
+        $validators = [
             $this->getMockValidator(),
             $this->getMockValidator(),
             $this->getMockValidator(),
-        );
+        ];
 
         foreach ($validators as $key => $validator) {
-            $validator->expects($this->once())->method('getLoader')->willReturn('autoload-fn.' . $key);
+            $validator->expects(self::once())->method('getLoader')->willReturn('autoload-fn.' . $key);
             $validator->method('getName')->willReturn('loader.' . $key);
         }
 
         $validator = new AutoloadValidator($validators, $report);
 
         $loaders = $validator->getLoaders();
-        $this->assertEquals(array('loader.0', 'loader.1', 'loader.2'), array_keys($loaders));
-        $this->assertEquals('autoload-fn.0', $loaders['loader.0']);
-        $this->assertEquals('autoload-fn.1', $loaders['loader.1']);
-        $this->assertEquals('autoload-fn.2', $loaders['loader.2']);
+        self::assertEquals(['loader.0', 'loader.1', 'loader.2'], \array_keys($loaders));
+        self::assertEquals('autoload-fn.0', $loaders['loader.0']);
+        self::assertEquals('autoload-fn.1', $loaders['loader.1']);
+        self::assertEquals('autoload-fn.2', $loaders['loader.2']);
     }
 
     /**
@@ -157,48 +151,42 @@ class AutoloadValidatorTest extends TestCase
     {
         $that = $this;
 
-        $report = $this
-            ->getMockBuilder('PhpCodeQuality\AutoloadValidation\Report\Report')
-            ->disableOriginalConstructor()
-            ->getMock();
+        $report = $this->getMockBuilder(Report::class)->disableOriginalConstructor()->getMock();
         $report
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('error')
             ->willReturnCallback(function (ClassAddedMoreThanOnceViolation $violation) use ($that) {
-                $that->assertInstanceOf(
-                    'PhpCodeQuality\AutoloadValidation\Violation\ClassAddedMoreThanOnceViolation',
-                    $violation
-                );
+                $that->assertInstanceOf(ClassAddedMoreThanOnceViolation::class, $violation);
                 $that->assertEquals(
-                    array(
+                    [
                         'validatorName' => 'idx0, dupe',
                         'className' => 'Vendor0\\Class0',
-                        'files' => array(
+                        'files' => [
                             'idx0' => '/src0/Class0.php',
                             'dupe' => '/different/source/Class0.php'
-                        )
-                    ),
+                        ]
+                    ],
                     $violation->getParameters()
                 );
             });
 
-        $validators = array(
+        $validators = [
             $this->getMockValidator(),
             $this->getMockValidator(),
             $this->getMockValidator(),
-        );
+        ];
 
         $shouldMap = array();
         foreach ($validators as $index => $validator) {
-            $class = sprintf('Vendor%1$d\\Class%1$d', $index);
-            $file  = sprintf('/src%1$d/Class%1$d.php', $index);
+            $class = \sprintf('Vendor%1$d\\Class%1$d', $index);
+            $file  = \sprintf('/src%1$d/Class%1$d.php', $index);
 
             $shouldMap[$class] = $file;
 
             $classMap = new AutoloadValidator\ClassMap();
             $classMap->add($class, $file);
-            $validator->expects($this->once())->method('getName')->willReturn('idx' . $index);
-            $validator->expects($this->once())->method('getClassMap')->willReturn($classMap);
+            $validator->expects(self::once())->method('getName')->willReturn('idx' . $index);
+            $validator->expects(self::once())->method('getClassMap')->willReturn($classMap);
         }
 
         $class = 'Vendor0\\Class0';
@@ -207,18 +195,18 @@ class AutoloadValidatorTest extends TestCase
         $dupe    = $this->getMockValidator();
         $dupeMap = new AutoloadValidator\ClassMap();
         $dupeMap->add($class, $file);
-        $dupe->expects($this->once())->method('getName')->willReturn('dupe');
-        $dupe->expects($this->once())->method('getClassMap')->willReturn($dupeMap);
+        $dupe->expects(self::once())->method('getName')->willReturn('dupe');
+        $dupe->expects(self::once())->method('getClassMap')->willReturn($dupeMap);
         $validators[] = $dupe;
 
         $validator = new AutoloadValidator($validators, $report);
 
         $classMap = $validator->getClassMap();
 
-        $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap', $classMap);
+        self::assertInstanceOf(ClassMap::class, $classMap);
         foreach ($shouldMap as $class => $file) {
-            $this->assertTrue($classMap->has($class));
-            $this->assertEquals($file, $classMap->getFileFor($class));
+            self::assertTrue($classMap->has($class));
+            self::assertEquals($file, $classMap->getFileFor($class));
         }
     }
 }

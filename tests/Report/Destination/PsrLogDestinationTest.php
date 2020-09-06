@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2018 Christian Schiffler, Tristan Lins
+ * (c) 2014-2020 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,7 @@
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2014-2018 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -24,9 +24,14 @@ namespace PhpCodeQuality\AutoloadValidation\Test\Report\Destination;
 use PhpCodeQuality\AutoloadValidation\Report\Destination\PsrLogDestination;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
+use Psr\Log\LoggerInterface;
+use PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 
 /**
  * This class tests the Report class.
+ *
+ * @covers \PhpCodeQuality\AutoloadValidation\Report\Destination\PsrLogDestination
  */
 class PsrLogDestinationTest extends TestCase
 {
@@ -37,9 +42,9 @@ class PsrLogDestinationTest extends TestCase
      */
     public function testCreation()
     {
-        $this->assertInstanceOf(
-            'PhpCodeQuality\AutoloadValidation\Report\Destination\PsrLogDestination',
-            new PsrLogDestination($this->getMockForAbstractClass('Psr\Log\LoggerInterface'))
+        self::assertInstanceOf(
+            PsrLogDestination::class,
+            new PsrLogDestination($this->getMockForAbstractClass(LoggerInterface::class))
         );
     }
 
@@ -50,17 +55,17 @@ class PsrLogDestinationTest extends TestCase
      */
     public function testAppend()
     {
-        $logger = $this->getMockForAbstractClass('Psr\Log\LoggerInterface');
+        $logger = $this->getMockForAbstractClass(LoggerInterface::class);
         $logger
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('log')
-            ->with(LogLevel::ERROR, 'This is the message', array('p1' => 'par1', 'p2' => 'par2'));
+            ->with(LogLevel::ERROR, 'This is the message', ['p1' => 'par1', 'p2' => 'par2']);
 
         $destination = new PsrLogDestination($logger);
 
-        $error = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        $error = $this->getMockForAbstractClass(ViolationInterface::class);
         $error->method('getMessage')->willReturn('This is the message');
-        $error->method('getParameters')->willReturn(array('p1' => 'par1', 'p2' => 'par2'));
+        $error->method('getParameters')->willReturn(['p1' => 'par1', 'p2' => 'par2']);
 
         $destination->append($error);
     }
@@ -69,18 +74,19 @@ class PsrLogDestinationTest extends TestCase
      * Test that adding violations raises an exception for unmapped severities.
      *
      * @return void
-     *
-     * @expectedException \InvalidArgumentException
-     *
-     * @expectedExceptionMessage Severity is not mapped:
      */
     public function testAppendRaisesExceptionForUnknownLevel()
     {
-        $destination = new PsrLogDestination($this->getMockForAbstractClass('Psr\Log\LoggerInterface'));
+        if (70000 < PHP_VERSION_ID) {
+            $this->expectException(\InvalidArgumentException::class);
+        } else {
+            $this->setExpectedException(\InvalidArgumentException::class);
+        }
+        $destination = new PsrLogDestination($this->getMockForAbstractClass(LoggerInterface::class));
 
-        $error = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        $error = $this->getMockForAbstractClass(ViolationInterface::class);
         $error->method('getMessage')->willReturn('This is the message');
-        $error->method('getParameters')->willReturn(array('par1', 'par2'));
+        $error->method('getParameters')->willReturn(['par1', 'par2']);
 
         $destination->append($error, 'unmapped severity');
     }
@@ -95,37 +101,37 @@ class PsrLogDestinationTest extends TestCase
         $object = new \DateTime();
 
         $logger = $this
-            ->getMockBuilder('Symfony\Component\Console\Logger\ConsoleLogger')
+            ->getMockBuilder(ConsoleLogger::class)
             ->disableOriginalConstructor()
             ->getMock();
         $logger
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('log')
             ->with(
                 LogLevel::ERROR,
                 'This is the message',
-                array(
+                [
                     'p1' => '<comment>par1</comment>',
                     'p2' => '<comment>par2</comment>',
                     'p3' => '[<comment>sub1</comment>: <comment>\'foo\'</comment>]',
                     'p4' => $object
-                )
+                ]
             );
 
         $destination = new PsrLogDestination($logger);
 
-        $error = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        $error = $this->getMockForAbstractClass(ViolationInterface::class);
         $error->method('getMessage')->willReturn('This is the message');
         $error->method('getParameters')
             ->willReturn(
-                array(
+                [
                     'p1' => 'par1',
                     'p2' => 'par2',
-                    'p3' => array(
+                    'p3' => [
                         'sub1' => 'foo'
-                    ),
+                    ],
                     'p4' => $object
-                )
+                ]
             );
 
         $destination->append($error);

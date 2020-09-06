@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2014 Christian Schiffler, Tristan Lins
+ * (c) 2014-2020 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,8 @@
  *
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -21,6 +22,9 @@
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
+use PhpCodeQuality\AutoloadValidation\Violation\GenericViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\ClassAddedMoreThanOnceViolation;
 
 /**
  * This class tests the AbstractValidator.
@@ -44,13 +48,10 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockReport()
         );
 
-        $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator', $validator);
-        $this->assertInstanceOf(
-            'PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap',
-            $validator->getClassMap()
-        );
+        self::assertInstanceOf(AbstractValidator::class, $validator);
+        self::assertInstanceOf(ClassMap::class, $validator->getClassMap());
 
-        $this->assertSame('name.validator-mock', $validator->getName());
+        self::assertSame('name.validator-mock', $validator->getName());
     }
 
     /**
@@ -61,20 +62,19 @@ class AbstractValidatorTest extends ValidatorTestCase
     public function testDoValidateCalledOnlyOnce()
     {
         $validator = $this->getMockForAbstractClass(
-            'PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator',
-            array(
+            AbstractValidator::class,
+            [
                 'name.validator-mock',
                 null,
                 '/some/dir',
                 $this->mockClassMapGenerator(),
                 $this->mockReport()
-            )
+            ]
         );
 
-        $validator->expects($this->once())->method('doValidate');
+        $validator->expects(self::once())->method('doValidate');
 
         /** @var AbstractValidator $validator */
-
         $validator->validate();
         $validator->getClassMap();
     }
@@ -86,11 +86,11 @@ class AbstractValidatorTest extends ValidatorTestCase
      */
     public function providerCutExtensionFromFileName()
     {
-        return array(
-            array('file', 'file.ext'),
-            array('/some/path/file', '/some/path/file.ext'),
-            array('/some/path/file.tar', '/some/path/file.tar.gz'),
-        );
+        return [
+            ['file', 'file.ext'],
+            ['/some/path/file', '/some/path/file.ext'],
+            ['/some/path/file.tar', '/some/path/file.tar.gz'],
+        ];
     }
 
     /**
@@ -114,7 +114,7 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockReport()
         );
 
-        $this->assertSame($expected, $validator->cutExtensionFromFileName($file));
+        self::assertSame($expected, $validator->cutExtensionFromFileName($file));
     }
 
     /**
@@ -124,11 +124,11 @@ class AbstractValidatorTest extends ValidatorTestCase
      */
     public function providerGetExtensionFromFileName()
     {
-        return array(
-            array('.ext', 'file.ext'),
-            array('.ext', '/some/path/file.ext'),
-            array('.gz', '/some/path/file.tar.gz'),
-        );
+        return [
+            ['.ext', 'file.ext'],
+            ['.ext', '/some/path/file.ext'],
+            ['.gz', '/some/path/file.tar.gz'],
+        ];
     }
 
     /**
@@ -152,7 +152,7 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockReport()
         );
 
-        $this->assertSame($expected, $validator->getExtensionFromFileName($file));
+        self::assertSame($expected, $validator->getExtensionFromFileName($file));
     }
 
     /**
@@ -162,10 +162,10 @@ class AbstractValidatorTest extends ValidatorTestCase
      */
     public function providerGetNameSpaceFromClassName()
     {
-        return array(
-            array('', '\StdClass'),
-            array('Some\NameSpace', 'Some\NameSpace\ClassName'),
-        );
+        return [
+            ['', '\StdClass'],
+            ['Some\NameSpace', 'Some\NameSpace\ClassName'],
+        ];
     }
 
     /**
@@ -189,7 +189,7 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockReport()
         );
 
-        $this->assertSame($expected, $validator->getNameSpaceFromClassName($class));
+        self::assertSame($expected, $validator->getNameSpaceFromClassName($class));
     }
 
     /**
@@ -199,10 +199,10 @@ class AbstractValidatorTest extends ValidatorTestCase
      */
     public function providerGetClassFromClassName()
     {
-        return array(
-            array('StdClass', '\StdClass'),
-            array('ClassName', 'Some\NameSpace\ClassName'),
-        );
+        return [
+            ['StdClass', '\StdClass'],
+            ['ClassName', 'Some\NameSpace\ClassName'],
+        ];
     }
 
     /**
@@ -226,7 +226,7 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockReport()
         );
 
-        $this->assertSame($expected, $validator->getClassFromClassName($class));
+        self::assertSame($expected, $validator->getClassFromClassName($class));
     }
 
     /**
@@ -240,12 +240,12 @@ class AbstractValidatorTest extends ValidatorTestCase
     {
         $generator = $this->mockClassMapGenerator();
         $generator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('scan')
             ->with('/some/dir/sub', null, 'Vendor\Namespace')
             ->willReturnCallback(function ($path, $whitelist, $namespace, &$messages) {
                 $messages[] = 'This is a warning';
-                return array();
+                return [];
             });
 
         $validator = new AbstractValidatorMock(
@@ -253,11 +253,11 @@ class AbstractValidatorTest extends ValidatorTestCase
             null,
             '/some/dir',
             $generator,
-            $this->mockReport('PhpCodeQuality\AutoloadValidation\Violation\GenericViolation')
+            $this->mockReport(GenericViolation::class)
         );
 
-        $this->assertEmpty($validator->classMapFromPath('/some/dir/sub', 'Vendor\Namespace'));
-        $this->assertTrue($validator->getClassMap()->isEmpty());
+        self::assertEmpty($validator->classMapFromPath('/some/dir/sub', 'Vendor\Namespace'));
+        self::assertTrue($validator->getClassMap()->isEmpty());
     }
 
     /**
@@ -267,11 +267,11 @@ class AbstractValidatorTest extends ValidatorTestCase
      */
     public function testClassMapGeneratingFromPathWorksWithNonEmptyResult()
     {
-        $classMap = array('Vendor\Namespace\ClassName' => '/some/dir/sub/ClassName.php');
+        $classMap = ['Vendor\Namespace\ClassName' => '/some/dir/sub/ClassName.php'];
 
         $generator = $this->mockClassMapGenerator($classMap);
         $generator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('scan')
             ->with('/some/dir/sub', null, 'Vendor\Namespace');
 
@@ -283,10 +283,10 @@ class AbstractValidatorTest extends ValidatorTestCase
             $this->mockReport()
         );
 
-        $this->assertEquals($classMap, $validator->classMapFromPath('/some/dir/sub', 'Vendor\Namespace'));
+        self::assertEquals($classMap, $validator->classMapFromPath('/some/dir/sub', 'Vendor\Namespace'));
         $resultingClassMap = $validator->getClassMap();
-        $this->assertFalse($resultingClassMap->isEmpty());
-        $this->assertEquals($classMap, iterator_to_array($resultingClassMap));
+        self::assertFalse($resultingClassMap->isEmpty());
+        self::assertEquals($classMap, \iterator_to_array($resultingClassMap));
     }
 
     /**
@@ -296,11 +296,11 @@ class AbstractValidatorTest extends ValidatorTestCase
      */
     public function testClassMapGeneratingFromPathWorksWithNonEmptyResultAndLogsDuplicates()
     {
-        $classMap = array('Vendor\Namespace\ClassName' => '/some/dir/sub2/ClassName.php');
+        $classMap = ['Vendor\Namespace\ClassName' => '/some/dir/sub2/ClassName.php'];
 
         $generator = $this->mockClassMapGenerator($classMap);
         $generator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('scan')
             ->with('/some/dir/sub', null, 'Vendor\Namespace');
 
@@ -310,24 +310,24 @@ class AbstractValidatorTest extends ValidatorTestCase
             '/some/dir',
             $generator,
             $this->mockReport(
-                'PhpCodeQuality\AutoloadValidation\Violation\ClassAddedMoreThanOnceViolation',
-                array(
+                ClassAddedMoreThanOnceViolation::class,
+                [
                     'className'     => 'Vendor\Namespace\ClassName',
-                    'files'         => array('/some/dir/sub1/ClassName.php', '/some/dir/sub2/ClassName.php'),
+                    'files'         => ['/some/dir/sub1/ClassName.php', '/some/dir/sub2/ClassName.php'],
                     'validatorName' => 'autoload.validator-mock',
-                )
+                ]
             )
         );
 
         $resultingClassMap = $validator->getClassMap();
         $resultingClassMap->add('Vendor\Namespace\ClassName', '/some/dir/sub1/ClassName.php');
 
-        $this->assertEquals($classMap, $validator->classMapFromPath('/some/dir/sub', 'Vendor\Namespace'));
-        $this->assertFalse($resultingClassMap->isEmpty());
+        self::assertEquals($classMap, $validator->classMapFromPath('/some/dir/sub', 'Vendor\Namespace'));
+        self::assertFalse($resultingClassMap->isEmpty());
 
-        $this->assertEquals(
-            array('Vendor\Namespace\ClassName' => '/some/dir/sub1/ClassName.php'),
-            iterator_to_array($resultingClassMap)
+        self::assertEquals(
+            ['Vendor\Namespace\ClassName' => '/some/dir/sub1/ClassName.php'],
+            \iterator_to_array($resultingClassMap)
         );
     }
 }

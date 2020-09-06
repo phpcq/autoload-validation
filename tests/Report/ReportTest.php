@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2018 Christian Schiffler, Tristan Lins
+ * (c) 2014-2020 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,7 @@
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -21,12 +21,16 @@
 
 namespace PhpCodeQuality\AutoloadValidation\Test\Report;
 
+use PhpCodeQuality\AutoloadValidation\Exception\AppendViolationException;
 use PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface;
 use PhpCodeQuality\AutoloadValidation\Report\Report;
 use PHPUnit\Framework\TestCase;
+use PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface;
 
 /**
  * This class tests the Report class.
+ *
+ * @covers \PhpCodeQuality\AutoloadValidation\Report\Report
  */
 class ReportTest extends TestCase
 {
@@ -37,15 +41,9 @@ class ReportTest extends TestCase
      */
     public function testCreation()
     {
-        $this->assertInstanceOf(
-            'PhpCodeQuality\AutoloadValidation\Report\Report',
-            new Report(
-                array(
-                    $this->getMockForAbstractClass(
-                        'PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface'
-                    )
-                )
-            )
+        self::assertInstanceOf(
+            Report::class,
+            new Report([$this->getMockForAbstractClass(DestinationInterface::class)])
         );
     }
 
@@ -53,14 +51,16 @@ class ReportTest extends TestCase
      * Test that the report can not be created with invalid arguments.
      *
      * @return void
-     *
-     * @expectedException \InvalidArgumentException
-     *
-     * @expectedExceptionMessage is not a valid destination
      */
     public function testCreationWithInvalidArguments()
     {
-        new Report(array(new \stdClass()));
+        if (70000 < PHP_VERSION_ID) {
+            $this->expectException(\InvalidArgumentException::class);
+        } else {
+            $this->setExpectedException(\InvalidArgumentException::class);
+        }
+
+        new Report([new \stdClass()]);
     }
 
     /**
@@ -71,15 +71,15 @@ class ReportTest extends TestCase
     public function testAppendError()
     {
         $report = new Report(array());
-        $error  = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        $error  = $this->getMockForAbstractClass(ViolationInterface::class);
         $report->error($error);
 
-        $this->assertTrue($report->hasError());
-        $this->assertFalse($report->hasWarning());
-        $this->assertFalse($report->has('unknown'));
-        $this->assertEquals(array($error), $report->getError());
-        $this->assertEquals(array(), $report->getWarning());
-        $this->assertEquals(array(), $report->get('unknown'));
+        self::assertTrue($report->hasError());
+        self::assertFalse($report->hasWarning());
+        self::assertFalse($report->has('unknown'));
+        self::assertEquals([$error], $report->getError());
+        self::assertEquals([], $report->getWarning());
+        self::assertEquals([], $report->get('unknown'));
     }
 
     /**
@@ -89,16 +89,16 @@ class ReportTest extends TestCase
      */
     public function testAppendWarning()
     {
-        $report = new Report(array());
-        $error  = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        $report = new Report([]);
+        $error  = $this->getMockForAbstractClass(ViolationInterface::class);
         $report->warn($error);
 
-        $this->assertFalse($report->hasError());
-        $this->assertTrue($report->hasWarning());
-        $this->assertFalse($report->has('unknown'));
-        $this->assertEquals(array(), $report->getError());
-        $this->assertEquals(array($error), $report->getWarning());
-        $this->assertEquals(array(), $report->get('unknown'));
+        self::assertFalse($report->hasError());
+        self::assertTrue($report->hasWarning());
+        self::assertFalse($report->has('unknown'));
+        self::assertEquals([], $report->getError());
+        self::assertEquals([$error], $report->getWarning());
+        self::assertEquals([], $report->get('unknown'));
     }
 
     /**
@@ -108,16 +108,16 @@ class ReportTest extends TestCase
      */
     public function testAppendCustom()
     {
-        $report = new Report(array());
-        $error  = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        $report = new Report([]);
+        $error  = $this->getMockForAbstractClass(ViolationInterface::class);
         $report->append($error, 'unknown');
 
-        $this->assertFalse($report->hasError());
-        $this->assertFalse($report->hasWarning());
-        $this->assertTrue($report->has('unknown'));
-        $this->assertEquals(array(), $report->getError());
-        $this->assertEquals(array(), $report->getWarning());
-        $this->assertEquals(array($error), $report->get('unknown'));
+        self::assertFalse($report->hasError());
+        self::assertFalse($report->hasWarning());
+        self::assertTrue($report->has('unknown'));
+        self::assertEquals([], $report->getError());
+        self::assertEquals([], $report->getWarning());
+        self::assertEquals([$error], $report->get('unknown'));
     }
 
     /**
@@ -127,17 +127,15 @@ class ReportTest extends TestCase
      */
     public function testAppendDelegatesToDestinations()
     {
-        $error = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        $error = $this->getMockForAbstractClass(ViolationInterface::class);
 
-        $destination1 =
-            $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface');
-        $destination2 =
-            $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface');
+        $destination1 = $this->getMockForAbstractClass(DestinationInterface::class);
+        $destination2 = $this->getMockForAbstractClass(DestinationInterface::class);
 
-        $destination1->expects($this->once())->method('append')->with($error, DestinationInterface::SEVERITY_ERROR);
-        $destination2->expects($this->once())->method('append')->with($error, DestinationInterface::SEVERITY_ERROR);
+        $destination1->expects(self::once())->method('append')->with($error, DestinationInterface::SEVERITY_ERROR);
+        $destination2->expects(self::once())->method('append')->with($error, DestinationInterface::SEVERITY_ERROR);
 
-        $report = new Report(array($destination1, $destination2));
+        $report = new Report([$destination1, $destination2]);
         $report->error($error);
     }
 
@@ -145,28 +143,28 @@ class ReportTest extends TestCase
      * Test that exception when appending to destination is queued until end of the loop.
      *
      * @return void
-     *
-     * @expectedException \PhpCodeQuality\AutoloadValidation\Exception\AppendViolationException
-     *
-     * @expectedExceptionMessage Could not append violation
      */
     public function testAppendToDestinationsExceptionAreQueued()
     {
-        $error = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        if (70000 < PHP_VERSION_ID) {
+            $this->expectException(AppendViolationException::class);
+        } else {
+            $this->setExpectedException(AppendViolationException::class);
+        }
 
-        $destination1 =
-            $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface');
-        $destination2 =
-            $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface');
+        $error = $this->getMockForAbstractClass(ViolationInterface::class);
+
+        $destination1 = $this->getMockForAbstractClass(DestinationInterface::class);
+        $destination2 = $this->getMockForAbstractClass(DestinationInterface::class);
 
         $destination1
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('append')
             ->with($error, DestinationInterface::SEVERITY_ERROR)
             ->willThrowException(new \RuntimeException('DIE!'));
-        $destination2->expects($this->once())->method('append')->with($error, DestinationInterface::SEVERITY_ERROR);
+        $destination2->expects(self::once())->method('append')->with($error, DestinationInterface::SEVERITY_ERROR);
 
-        $report = new Report(array($destination1, $destination2));
+        $report = new Report([$destination1, $destination2]);
         $report->error($error);
     }
 
@@ -177,15 +175,14 @@ class ReportTest extends TestCase
      */
     public function testSeverityOverridingWorks()
     {
-        $error = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        $error = $this->getMockForAbstractClass(ViolationInterface::class);
 
-        $destination =
-            $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface');
-        $destination->expects($this->once())->method('append')->with($error, DestinationInterface::SEVERITY_ERROR);
+        $destination = $this->getMockForAbstractClass(DestinationInterface::class);
+        $destination->expects(self::once())->method('append')->with($error, DestinationInterface::SEVERITY_ERROR);
 
         $report = new Report(
-            array($destination),
-            array(DestinationInterface::SEVERITY_WARNING => DestinationInterface::SEVERITY_ERROR)
+            [$destination],
+            [DestinationInterface::SEVERITY_WARNING => DestinationInterface::SEVERITY_ERROR]
         );
 
         $report->warn($error);
@@ -198,15 +195,15 @@ class ReportTest extends TestCase
      */
     public function testSeveritySilencingWorks()
     {
-        $error = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        $error = $this->getMockForAbstractClass(ViolationInterface::class);
 
         $destination =
-            $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface');
-        $destination->expects($this->never())->method('append');
+            $this->getMockForAbstractClass(DestinationInterface::class);
+        $destination->expects(self::never())->method('append');
 
         $report = new Report(
-            array($destination),
-            array(DestinationInterface::SEVERITY_WARNING => null)
+            [$destination],
+            [DestinationInterface::SEVERITY_WARNING => null]
         );
 
         $report->warn($error);
@@ -216,20 +213,21 @@ class ReportTest extends TestCase
      * Test that an empty severity raises an exception.
      *
      * @return void
-     *
-     * @expectedException \InvalidArgumentException
-     *
-     * @expectedExceptionMessage Invalid severity string
      */
     public function testEmptySeverityRaisesException()
     {
-        $error = $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Violation\ViolationInterface');
+        if (70000 < PHP_VERSION_ID) {
+            $this->expectException(\InvalidArgumentException::class);
+        } else {
+            $this->setExpectedException(\InvalidArgumentException::class);
+        }
 
-        $destination =
-            $this->getMockForAbstractClass('PhpCodeQuality\AutoloadValidation\Report\Destination\DestinationInterface');
-        $destination->expects($this->never())->method('append');
+        $error = $this->getMockForAbstractClass(ViolationInterface::class);
 
-        $report = new Report(array($destination));
+        $destination = $this->getMockForAbstractClass(DestinationInterface::class);
+        $destination->expects(self::never())->method('append');
+
+        $report = new Report([$destination]);
 
         $report->append($error, null);
     }
