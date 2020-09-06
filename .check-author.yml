@@ -1,7 +1,13 @@
 exclude:
-  - languages
-  - tests/fixtures
+    - languages
+    - tests/fixtures
 
 copy-left:
-  "Gyula Sallai <salla016@gmail.com>": "src/ClassMapGenerator.php"
-  "Jordi Boggiano <j.boggiano@seld.be>": "src/ClassMapGenerator.php"
+    "Gyula Sallai <salla016@gmail.com>":
+        - "src/ClassMapGenerator.php"
+    "Jordi Boggiano <j.boggiano@seld.be>":
+        - "src/ClassMapGenerator.php"
+    "Christian Schiffler <c.schiffler@cyberspectrum.de>":
+        - "src/Application/CheckAutoloadingApplication.php"
+    "Tristan Lins <tristan@lins.io>":
+        - "src/Application/CheckAutoloadingApplication.php"
