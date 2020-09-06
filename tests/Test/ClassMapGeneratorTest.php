@@ -56,7 +56,7 @@ class ClassMapGeneratorTest extends TestCase
      */
     public function getTestCreateMapTests()
     {
-        $fixtures = \realpath(__DIR__).'/fixtures/classmap';
+        $fixtures = \dirname(\realpath(__DIR__)) . '/fixtures/classmap';
 
         $data = [
             [
@@ -101,7 +101,7 @@ class ClassMapGeneratorTest extends TestCase
                 'Unicode\\↑\\↑'           => $fixtures . '/classmap/Unicode.php',
             ]
             ],
-            [__DIR__ . '/fixtures/classmap/template', []],
+            [\dirname(\realpath(__DIR__)) . '/fixtures/classmap/template', []],
         ];
 
         if (PHP_VERSION_ID >= 50400) {
@@ -145,7 +145,7 @@ class ClassMapGeneratorTest extends TestCase
     {
         $this->checkIfFinderIsAvailable();
 
-        $fixtures = \realpath(__DIR__).'/fixtures/classmap';
+        $fixtures = \dirname(\realpath(__DIR__)) . '/fixtures/classmap';
         $finder   = new Finder();
         $finder->files()->in($fixtures . '/beta/NamespaceCollision');
 

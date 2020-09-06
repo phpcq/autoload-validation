@@ -28,7 +28,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "PhpCodeQuality\\AutoloadValidation\\Test\\" : "tests"
+            "PhpCodeQuality\\AutoloadValidation\\Test\\" : "tests/Test"
         }
     },
     "require": {

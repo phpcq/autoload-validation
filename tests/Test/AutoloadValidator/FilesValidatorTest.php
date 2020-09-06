@@ -59,7 +59,7 @@ class FilesValidatorTest extends ValidatorTestCase
      */
     public function testAddToLoader()
     {
-        $fixture = \dirname(__DIR__) . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'files_loader.php';
+        $fixture = \dirname(\dirname(\realpath(__DIR__))) . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'files_loader.php';
 
         $validator = new FilesValidator(
             'autoload.files',

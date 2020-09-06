@@ -15,7 +15,7 @@
 >
     <testsuites>
         <testsuite name="Autoload validation test suite">
-            <directory>./tests</directory>
+            <directory>./tests/Test</directory>
         </testsuite>
     </testsuites>
 
