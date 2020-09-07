@@ -29,6 +29,8 @@ use PhpCodeQuality\AutoloadValidation\Violation\ClassAddedMoreThanOnceViolation;
 /**
  * This class tests the AbstractValidator.
  *
+ * @covers \PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator
+ *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class AbstractValidatorTest extends ValidatorTestCase

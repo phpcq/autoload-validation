@@ -13,7 +13,7 @@
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2014-20120 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -31,6 +31,8 @@ use PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr4Validator;
 
 /**
  * This class tests the AutoloadValidatorFactory.
+ *
+ * @covers \PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory
  */
 class AutoloadValidatorFactoryTest extends ValidatorTestCase
 {
