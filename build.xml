@@ -8,4 +8,12 @@
 -->
 <project name="phpcq/autoload-validation" default="build">
     <import file="vendor/phpcq/phpcq/phpcq.main.xml" />
+    <target name="phpspec" />
+
+    <!-- we have to override the command as otherwise phpcq won't find it. We are the root repository. -->
+    <target name="travis-configuration-check">
+        <exec dir="${basedir}" executable="bin/check-autoloading.php" failonerror="true" taskname="autoload-validation">
+            <arg line="${basedir}"/>
+        </exec>
+    </target>
 </project>

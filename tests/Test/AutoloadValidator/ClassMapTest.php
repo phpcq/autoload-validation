@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2018 Christian Schiffler, Tristan Lins
+ * (c) 2014-2020 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,7 @@
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2014-2018 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -22,10 +22,13 @@
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
+use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
 use PHPUnit\Framework\TestCase;
 
 /**
  * This class tests the ClassMap.
+ *
+ * @covers \PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap
  */
 class ClassMapTest extends TestCase
 {
@@ -37,8 +40,8 @@ class ClassMapTest extends TestCase
     public function testCreation()
     {
         $classMap = new ClassMap();
-        $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap', $classMap);
-        $this->assertTrue($classMap->isEmpty());
+        self::assertInstanceOf(ClassMap::class, $classMap);
+        self::assertTrue($classMap->isEmpty());
     }
 
     /**
@@ -49,9 +52,9 @@ class ClassMapTest extends TestCase
     public function testClassMapIsTraversable()
     {
         $classMap = new ClassMap();
-        $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap', $classMap);
-        $this->assertInstanceOf('\Traversable', $classMap);
-        $this->assertInstanceOf('\Traversable', $classMap->getIterator());
+        self::assertInstanceOf(ClassMap::class, $classMap);
+        self::assertInstanceOf(\Traversable::class, $classMap);
+        self::assertInstanceOf(\Traversable::class, $classMap->getIterator());
     }
 
     /**
@@ -63,22 +66,26 @@ class ClassMapTest extends TestCase
     {
         $classMap = new ClassMap();
 
-        $this->assertFalse($classMap->has('Some\Class'));
-        $this->assertSame($classMap, $classMap->add('Some\Class', '/some/path'));
-        $this->assertTrue($classMap->has('Some\Class'));
-        $this->assertSame('/some/path', $classMap->getFileFor('Some\Class'));
-        $this->assertFalse($classMap->isEmpty());
+        self::assertFalse($classMap->has('Some\Class'));
+        self::assertSame($classMap, $classMap->add('Some\Class', '/some/path'));
+        self::assertTrue($classMap->has('Some\Class'));
+        self::assertSame('/some/path', $classMap->getFileFor('Some\Class'));
+        self::assertFalse($classMap->isEmpty());
     }
 
     /**
      * Test that the class map throws an exception when a class has already been added.
      *
      * @return void
-     *
-     * @expectedException \PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException
      */
     public function testClassMapThrowsExceptionForAddingClassTwice()
     {
+        if (70000 < PHP_VERSION_ID) {
+            $this->expectException(ClassAlreadyRegisteredException::class);
+        } else {
+            $this->setExpectedException(ClassAlreadyRegisteredException::class);
+        }
+
         $classMap = new ClassMap();
         $classMap->add('Some\Class', '/some/path');
         $classMap->add('Some\Class', '/other/path');
@@ -106,7 +113,7 @@ class ClassMapTest extends TestCase
     {
         $classMap = new ClassMap();
         $classMap->add('\Some\Class', '/some/path');
-        $this->assertTrue($classMap->has('Some\Class'));
+        self::assertTrue($classMap->has('Some\Class'));
     }
 
     /**
@@ -119,20 +126,24 @@ class ClassMapTest extends TestCase
         $classMap = new ClassMap();
         $classMap->add('Some\Class', '/some/path');
 
-        $this->assertSame($classMap, $classMap->remove('Some\Class'));
-        $this->assertFalse($classMap->has('Some\Class'));
-        $this->assertTrue($classMap->isEmpty());
+        self::assertSame($classMap, $classMap->remove('Some\Class'));
+        self::assertFalse($classMap->has('Some\Class'));
+        self::assertTrue($classMap->isEmpty());
     }
 
     /**
      * Test that the class map throws an exception when an unregistered class shall get removed.
      *
      * @return void
-     *
-     * @expectedException \InvalidArgumentException
      */
     public function testClassMapThrowsExceptionForRemovingUnregistered()
     {
+        if (70000 < PHP_VERSION_ID) {
+            $this->expectException(\InvalidArgumentException::class);
+        } else {
+            $this->setExpectedException(\InvalidArgumentException::class);
+        }
+
         $classMap = new ClassMap();
         $classMap->remove('Some\Class');
     }
@@ -141,11 +152,15 @@ class ClassMapTest extends TestCase
      * Test that the class map throws an exception when a class file is retrieved for an unregistered class.
      *
      * @return void
-     *
-     * @expectedException \InvalidArgumentException
      */
     public function testClassMapThrowsExceptionGettingFileOfUnregisteredClass()
     {
+        if (70000 < PHP_VERSION_ID) {
+            $this->expectException(\InvalidArgumentException::class);
+        } else {
+            $this->setExpectedException(\InvalidArgumentException::class);
+        }
+
         $classMap = new ClassMap();
 
         $classMap->getFileFor('Unknown\Class');

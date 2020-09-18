@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2014 Christian Schiffler, Tristan Lins
+ * (c) 2014-2020 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,8 @@
  *
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -21,9 +22,18 @@
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr4Validator;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator;
+use Composer\Autoload\ClassLoader;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr4\NameSpaceInvalidViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr4\NamespaceMustEndWithBackslashViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr4\NoClassesFoundInPathViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr4\ClassFoundInWrongFileViolation;
+use PhpCodeQuality\AutoloadValidation\Violation\Psr4\NamespacePrefixMismatchViolation;
 
 /**
  * This class tests the Psr4Validator.
+ *
+ * @covers \PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr4Validator
  */
 class Psr4ValidatorTest extends ValidatorTestCase
 {
@@ -36,16 +46,16 @@ class Psr4ValidatorTest extends ValidatorTestCase
     {
         $validator = new Psr4Validator(
             'autoload',
-            array(
+            [
                 'AVendor\\' => 'src/',
                 'Vendor\\Namespace\\' => ''
-            ),
+            ],
             '/some/dir',
             $this->mockClassMapGenerator(),
             $this->mockReport()
         );
 
-        $this->assertInstanceOf('PhpCodeQuality\AutoloadValidation\AutoloadValidator\AbstractValidator', $validator);
+        self::assertInstanceOf(AbstractValidator::class, $validator);
     }
 
     /**
@@ -57,10 +67,10 @@ class Psr4ValidatorTest extends ValidatorTestCase
     {
         $validator = new Psr4Validator(
             'autoload.psr-4',
-            array(
+            [
                 'AVendor\\' => 'src/',
                 'Vendor\\Namespace\\' => ''
-            ),
+            ],
             '/some/dir',
             $this->mockClassMapGenerator(),
             $this->mockReport()
@@ -68,12 +78,12 @@ class Psr4ValidatorTest extends ValidatorTestCase
 
         $loader = $validator->getLoader();
 
-        $this->assertInstanceOf('Composer\Autoload\ClassLoader', $loader[0]);
-        $this->assertEquals(
-            array(
-                'AVendor\\' => array('/some/dir/src/'),
-                'Vendor\\Namespace\\' => array('/some/dir/')
-            ),
+        self::assertInstanceOf(ClassLoader::class, $loader[0]);
+        self::assertEquals(
+            [
+                'AVendor\\' => ['/some/dir/src/'],
+                'Vendor\\Namespace\\' => ['/some/dir/']
+            ],
             $loader[0]->getPrefixesPsr4()
         );
     }
@@ -87,21 +97,21 @@ class Psr4ValidatorTest extends ValidatorTestCase
     {
         $generator = $this->mockClassMapGenerator();
         $generator
-            ->expects($this->never())
+            ->expects(self::never())
             ->method('scan');
 
         $validator = new Psr4Validator(
             'autoload.psr-4',
-            array(0 => '/src'),
+            [0 => '/src'],
             '/some/dir',
             $generator,
             $this->mockReport(
-                'PhpCodeQuality\AutoloadValidation\Violation\Psr4\NameSpaceInvalidViolation',
-                array(
+                NameSpaceInvalidViolation::class,
+                [
                     'validatorName' => 'autoload.psr-4',
                     'path' => '/src',
                     'psr4Prefix' => 0
-                )
+                ]
             )
         );
 
@@ -117,21 +127,21 @@ class Psr4ValidatorTest extends ValidatorTestCase
     {
         $generator = $this->mockClassMapGenerator();
         $generator
-            ->expects($this->never())
+            ->expects(self::never())
             ->method('scan');
 
         $validator = new Psr4Validator(
             'autoload.psr-4',
-            array('Vendor\\Prefix' => '/src'),
+            ['Vendor\\Prefix' => '/src'],
             '/some/dir',
             $generator,
             $this->mockReport(
-                'PhpCodeQuality\AutoloadValidation\Violation\Psr4\NamespaceMustEndWithBackslashViolation',
-                array(
+                NamespaceMustEndWithBackslashViolation::class,
+                [
                     'validatorName' => 'autoload.psr-4',
                     'path' => '/src',
                     'psr4Prefix' => 'Vendor\\Prefix'
-                )
+                ]
             )
         );
 
@@ -147,23 +157,23 @@ class Psr4ValidatorTest extends ValidatorTestCase
     {
         $generator = $this->mockClassMapGenerator();
         $generator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('scan')
             ->with('/some/dir/src/', null)
-            ->willReturn(array());
+            ->willReturn([]);
 
         $validator = new Psr4Validator(
             'autoload.psr-4',
-            array('Vendor\\' => 'src/'),
+            ['Vendor\\' => 'src/'],
             '/some/dir',
             $generator,
             $this->mockReport(
-                'PhpCodeQuality\AutoloadValidation\Violation\Psr4\NoClassesFoundInPathViolation',
-                array(
+                NoClassesFoundInPathViolation::class,
+                [
                     'validatorName' => 'autoload.psr-4',
                     'path' => 'src/',
                     'psr4Prefix' => 'Vendor\\'
-                )
+                ]
             )
         );
 
@@ -180,12 +190,12 @@ class Psr4ValidatorTest extends ValidatorTestCase
         $generator = $this->mockClassMapGenerator();
         $generator->method('scan')
             ->withConsecutive(
-                array('/some/dir/src'),
-                array('/some/dir/another/dir')
+                ['/some/dir/src'],
+                ['/some/dir/another/dir']
             )
             ->willReturnOnConsecutiveCalls(
-                array('Vendor\A\ClassName1' => '/some/dir/src/ClassName1.php'),
-                array('Vendor\B\ClassName2' => '/some/dir/another/dir/ClassName2.php')
+                ['Vendor\A\ClassName1' => '/some/dir/src/ClassName1.php'],
+                ['Vendor\B\ClassName2' => '/some/dir/another/dir/ClassName2.php']
             );
 
         $validator = new Psr4Validator(
@@ -202,10 +212,10 @@ class Psr4ValidatorTest extends ValidatorTestCase
         $validator->validate();
 
         $classMap = $validator->getClassMap();
-        $classes  = iterator_to_array($classMap);
-        $this->assertEquals(array('Vendor\A\ClassName1', 'Vendor\B\ClassName2'), array_keys($classes));
-        $this->assertEquals('/some/dir/src/ClassName1.php', $classMap->getFileFor('Vendor\A\ClassName1'));
-        $this->assertEquals('/some/dir/another/dir/ClassName2.php', $classMap->getFileFor('Vendor\B\ClassName2'));
+        $classes  = \iterator_to_array($classMap);
+        self::assertEquals(array('Vendor\A\ClassName1', 'Vendor\B\ClassName2'), \array_keys($classes));
+        self::assertEquals('/some/dir/src/ClassName1.php', $classMap->getFileFor('Vendor\A\ClassName1'));
+        self::assertEquals('/some/dir/another/dir/ClassName2.php', $classMap->getFileFor('Vendor\B\ClassName2'));
     }
 
     /**
@@ -217,100 +227,100 @@ class Psr4ValidatorTest extends ValidatorTestCase
      */
     public function providerValidate()
     {
-        return array(
-            array(
+        return [
+            [
                 null,
-                array('Acme\Log\Writer\\' => 'acme-log-writer/lib'),
-                array('Acme\Log\Writer\File_Writer' => '/acme-log-writer/lib/File_Writer.php')
-            ),
-            array(
+                ['Acme\Log\Writer\\' => 'acme-log-writer/lib'],
+                ['Acme\Log\Writer\File_Writer' => '/acme-log-writer/lib/File_Writer.php']
+            ],
+            [
                 null,
-                array('Aura\Web\\' => 'path/to/aura-web/src'),
-                array('\Aura\Web\Response\Status' => '/path/to/aura-web/src/Response/Status.php')
-            ),
-            array(
+                ['Aura\Web\\' => 'path/to/aura-web/src'],
+                ['\Aura\Web\Response\Status' => '/path/to/aura-web/src/Response/Status.php']
+            ],
+            [
                 null,
-                array('Symfony\Core\\' => 'vendor/Symfony/Core'),
-                array('Symfony\Core\Request' => '/vendor/Symfony/Core/Request.php')
-            ),
-            array(
+                ['Symfony\Core\\' => 'vendor/Symfony/Core'],
+                ['Symfony\Core\Request' => '/vendor/Symfony/Core/Request.php']
+            ],
+            [
                 null,
-                array('Zend\\' => 'usr/includes/Zend'),
-                array('Zend\Acl' => '/usr/includes/Zend/Acl.php')
-            ),
-            array(
-                array(
-                    'PhpCodeQuality\AutoloadValidation\Violation\Psr4\ClassFoundInWrongFileViolation',
-                    array(
+                ['Zend\\' => 'usr/includes/Zend'],
+                ['Zend\Acl' => '/usr/includes/Zend/Acl.php']
+            ],
+            [
+                [
+                    ClassFoundInWrongFileViolation::class,
+                    [
                         'class'         => 'Acme\Log\Writer\File_Writer',
                         'fileIs'        => '/acme-log-writer/lib/File_Writerr.php',
                         'fileShould'    => '/acme-log-writer/lib/File_Writer.php',
                         'psr4Prefix'    => 'Acme\Log\Writer\\',
                         'path'          => '/acme-log-writer/lib',
                         'validatorName' => 'autoload.psr-4'
-                    )
-                ),
-                array('Acme\Log\Writer\\' => 'acme-log-writer/lib'),
-                array('Acme\Log\Writer\File_Writer' => '/acme-log-writer/lib/File_Writerr.php')
-            ),
-            array(
-                array(
-                    'PhpCodeQuality\AutoloadValidation\Violation\Psr4\NamespacePrefixMismatchViolation',
-                    array(
+                    ]
+                ],
+                ['Acme\Log\Writer\\' => 'acme-log-writer/lib'],
+                ['Acme\Log\Writer\File_Writer' => '/acme-log-writer/lib/File_Writerr.php']
+            ],
+            [
+                [
+                    NamespacePrefixMismatchViolation::class,
+                    [
                         'class'         => 'Acme\Log\File_Writer',
                         'namespace'     => 'Acme\Log',
                         'psr4Prefix'    => 'Acme\Log\Writer\\',
                         'path'          => '/acme-log-writer/lib/',
                         'validatorName' => 'autoload.psr-4'
-                    )
-                ),
-                array('Acme\Log\Writer\\' => 'acme-log-writer/lib/'),
-                array('Acme\Log\File_Writer' => '/acme-log-writer/lib/File_Writer.php')
-            ),
-            array(
-                array(
-                    'PhpCodeQuality\AutoloadValidation\Violation\Psr4\ClassFoundInWrongFileViolation',
-                    array(
+                    ]
+                ],
+                ['Acme\Log\Writer\\' => 'acme-log-writer/lib/'],
+                ['Acme\Log\File_Writer' => '/acme-log-writer/lib/File_Writer.php']
+            ],
+            [
+                [
+                    ClassFoundInWrongFileViolation::class,
+                    [
                         'class'         => 'Aura\Web\Response\Status',
                         'fileIs'        => '/path/to/auraweb/src/Response/Status.php',
                         'fileShould'    => '/path/to/aura-web/src/Response/Status.php',
                         'psr4Prefix'    => 'Aura\Web\\',
                         'path'          => '/path/to/aura-web/src',
                         'validatorName' => 'autoload.psr-4'
-                    )
-                ),
-                array('Aura\Web\\' => 'path/to/aura-web/src'),
-                array('\Aura\Web\Response\Status' => '/path/to/auraweb/src/Response/Status.php')
-            ),
-            array(
-                array(
-                    'PhpCodeQuality\AutoloadValidation\Violation\Psr4\NamespacePrefixMismatchViolation',
-                    array(
+                    ]
+                ],
+                ['Aura\Web\\' => 'path/to/aura-web/src'],
+                ['\Aura\Web\Response\Status' => '/path/to/auraweb/src/Response/Status.php']
+            ],
+            [
+                [
+                    NamespacePrefixMismatchViolation::class,
+                    [
                         'class'         => 'Symfony\Core\Request',
                         'namespace'     => 'Symfony\Core',
                         'psr4Prefix'    => 'Symfony\Coreeeeeee\\',
                         'path'          => '/vendor/Symfony/Core',
                         'validatorName' => 'autoload.psr-4'
-                    )
-                ),
-                array('Symfony\Coreeeeeee\\' => 'vendor/Symfony/Core'),
-                array('Symfony\Core\Request' => '/vendor/Symfony/Core/Request.php')
-            ),
-            array(
-                array(
-                    'PhpCodeQuality\AutoloadValidation\Violation\Psr4\NamespacePrefixMismatchViolation',
-                    array(
+                    ]
+                ],
+                ['Symfony\Coreeeeeee\\' => 'vendor/Symfony/Core'],
+                ['Symfony\Core\Request' => '/vendor/Symfony/Core/Request.php']
+            ],
+            [
+                [
+                    NamespacePrefixMismatchViolation::class,
+                    [
                         'class'         => 'Zend\Acl',
                         'namespace'     => 'Zend',
                         'psr4Prefix'    => 'Zend\Acl\\',
                         'path'          => '/usr/includes/Zend',
                         'validatorName' => 'autoload.psr-4'
-                    )
-                ),
-                array('Zend\Acl\\' => 'usr/includes/Zend'),
-                array('Zend\Acl' => '/usr/includes/Zend/Acl.php')
-            ),
-        );
+                    ]
+                ],
+                ['Zend\Acl\\' => 'usr/includes/Zend'],
+                ['Zend\Acl' => '/usr/includes/Zend/Acl.php']
+            ],
+        ];
     }
 
     /**
@@ -339,7 +349,7 @@ class Psr4ValidatorTest extends ValidatorTestCase
 
         $generator = $this->mockClassMapGenerator();
         $generator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('scan')
             ->willReturn($classMap);
 

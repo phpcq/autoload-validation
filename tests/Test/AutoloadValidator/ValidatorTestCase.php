@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2018 Christian Schiffler, Tristan Lins
+ * (c) 2014-2020 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,7 @@
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2014-2018 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -40,11 +40,11 @@ class ValidatorTestCase extends TestCase
      *
      * @return \PHPUnit_Framework_MockObject_MockObject|ClassMapGenerator
      */
-    protected function mockClassMapGenerator($classMap = array())
+    protected function mockClassMapGenerator($classMap = [])
     {
         $mock = $this
-            ->getMockBuilder('PhpCodeQuality\AutoloadValidation\ClassMapGenerator')
-            ->setMethods(array('scan'))
+            ->getMockBuilder(ClassMapGenerator::class)
+            ->setMethods(['scan'])
             ->getMock();
         if ($classMap) {
             $mock->method('scan')->willReturn($classMap);
@@ -62,17 +62,17 @@ class ValidatorTestCase extends TestCase
      *
      * @return \PHPUnit_Framework_MockObject_MockObject|Report
      */
-    protected function mockReport($expectedViolationClass = '', $expectedParameters = array())
+    protected function mockReport($expectedViolationClass = '', $expectedParameters = [])
     {
         $that = $this;
 
         $mock = $this
-            ->getMockBuilder('PhpCodeQuality\AutoloadValidation\Report\Report')
-            ->setMethods(array('append'))
+            ->getMockBuilder(Report::class)
+            ->setMethods(['append'])
             ->disableOriginalConstructor()
             ->getMock();
         if ($expectedViolationClass) {
-            $mock->expects($this->once())->method('append')->willReturnCallback(
+            $mock->expects(self::once())->method('append')->willReturnCallback(
                 function (ViolationInterface $violation) use ($that, $expectedViolationClass, $expectedParameters) {
                     $that->assertInstanceOf($expectedViolationClass, $violation);
                     if (!empty($expectedParameters)) {
@@ -81,7 +81,7 @@ class ValidatorTestCase extends TestCase
                 }
             );
         } else {
-            $mock->expects($this->never())->method('append');
+            $mock->expects(self::never())->method('append');
         }
 
         return $mock;

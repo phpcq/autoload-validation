@@ -3,7 +3,7 @@
 /**
  * This file is part of phpcq/autoload-validation.
  *
- * (c) 2014 Christian Schiffler, Tristan Lins
+ * (c) 2014-2020 Christian Schiffler, Tristan Lins
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,8 @@
  *
  * @package    phpcq/autoload-validation
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2014-2016 Christian Schiffler <c.schiffler@cyberspectrum.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
+ * @copyright  2014-2020 Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @license    https://github.com/phpcq/autoload-validation/blob/master/LICENSE MIT
  * @link       https://github.com/phpcq/autoload-validation
  * @filesource
@@ -20,11 +21,18 @@
 
 namespace PhpCodeQuality\AutoloadValidation\Test\AutoloadValidator;
 
+use PDepend\TextUI\Runner;
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory;
 use PhpCodeQuality\AutoloadValidation\Report\Report;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMapValidator;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\FilesValidator;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr0Validator;
+use PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr4Validator;
 
 /**
  * This class tests the AutoloadValidatorFactory.
+ *
+ * @covers \PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory
  */
 class AutoloadValidatorFactoryTest extends ValidatorTestCase
 {
@@ -38,13 +46,10 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
         $factory = new AutoloadValidatorFactory(
             '/some/dir',
             $this->mockClassMapGenerator(),
-            new Report(array())
+            new Report([])
         );
 
-        $this->assertInstanceOf(
-            'PhpCodeQuality\AutoloadValidation\AutoloadValidator\AutoloadValidatorFactory',
-            $factory
-        );
+        self::assertInstanceOf(AutoloadValidatorFactory::class, $factory);
 
         return $factory;
     }
@@ -58,10 +63,7 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
     {
         $factory = $this->mockFactory();
 
-        $this->assertInstanceOf(
-            'PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMapValidator',
-            $factory->createValidator('autoload', 'classmap', array())
-        );
+        self::assertInstanceOf(ClassMapValidator::class, $factory->createValidator('autoload', 'classmap', []));
     }
 
     /**
@@ -73,10 +75,7 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
     {
         $factory = $this->mockFactory();
 
-        $this->assertInstanceOf(
-            'PhpCodeQuality\AutoloadValidation\AutoloadValidator\FilesValidator',
-            $factory->createValidator('autoload', 'files', array())
-        );
+        self::assertInstanceOf(FilesValidator::class, $factory->createValidator('autoload', 'files', []));
     }
 
     /**
@@ -88,10 +87,7 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
     {
         $factory = $this->mockFactory();
 
-        $this->assertInstanceOf(
-            'PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr0Validator',
-            $factory->createValidator('autoload', 'psr-0', array())
-        );
+        self::assertInstanceOf(Psr0Validator::class, $factory->createValidator('autoload', 'psr-0', []));
     }
 
     /**
@@ -103,10 +99,7 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
     {
         $factory = $this->mockFactory();
 
-        $this->assertInstanceOf(
-            'PhpCodeQuality\AutoloadValidation\AutoloadValidator\Psr4Validator',
-            $factory->createValidator('autoload', 'psr-4', array())
-        );
+        self::assertInstanceOf(Psr4Validator::class, $factory->createValidator('autoload', 'psr-4', []));
     }
 
     /**
@@ -116,23 +109,25 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
      */
     public function testExcludeFromClassmapSkippedInCreation()
     {
-        $this->assertEmpty($this->mockFactory()->createValidator('autoload', 'exclude-from-classmap', array()));
+        self::assertEmpty($this->mockFactory()->createValidator('autoload', 'exclude-from-classmap', []));
     }
 
     /**
      * Test that the factory throws an exception for unknown type names.
      *
      * @return void
-     *
-     * @expectedException \InvalidArgumentException
-     *
-     * @expectedExceptionMessage Unknown auto loader type
      */
     public function testFactoryThrowsExceptionForUnknownType()
     {
+        if (70000 < PHP_VERSION_ID) {
+            $this->expectException(\InvalidArgumentException::class);
+        } else {
+            $this->setExpectedException(\InvalidArgumentException::class);
+        }
+
         $factory = $this->mockFactory();
 
-        $factory->createValidator('autoload', '----unkown-----type---name----', array());
+        $factory->createValidator('autoload', '----unkown-----type---name----', []);
     }
 
     /**
@@ -144,7 +139,7 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
     {
         $factory = $this->mockFactory();
 
-        $this->assertEquals(array(), $factory->createFromComposerJson(array()));
+        self::assertEquals([], $factory->createFromComposerJson([]));
     }
 
     /**
@@ -157,16 +152,16 @@ class AutoloadValidatorFactoryTest extends ValidatorTestCase
         $factory = $this->mockFactory();
 
         $validators = $factory->createFromComposerJson(
-            array(
-                'autoload' => array(
-                    'psr-0' => array('Vendor\\' => 'src')
-                ),
-                'autoload-dev' => array(
-                    'psr-4' => array('Vendor\\' => 'src')
-                ),
-            )
+            [
+                'autoload' => [
+                    'psr-0' => ['Vendor\\' => 'src']
+                ],
+                'autoload-dev' => [
+                    'psr-4' => ['Vendor\\' => 'src']
+                ],
+            ]
         );
 
-        $this->assertCount(2, $validators);
+        self::assertCount(2, $validators);
     }
 }
