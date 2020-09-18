@@ -38,11 +38,7 @@
         "psr/log": "^1.1.3"
     },
     "require-dev": {
-        "phpcq/all-tasks": "^1.3@dev",
-        "phpcq/author-validation": "^1.5@dev",
-        "phpcq/travis-configuration-check": "^1.3@dev",
-        "phpcq/branch-alias-validation": "^1.3@dev",
-        "phpcq/coding-standard": "^2.1@dev"
+        "phpcq/all-tasks": "^1.3"
     },
     "extra": {
         "branch-alias": {
