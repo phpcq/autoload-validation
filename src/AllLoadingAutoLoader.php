@@ -22,7 +22,10 @@ namespace PhpCodeQuality\AutoloadValidation;
 
 use PhpCodeQuality\AutoloadValidation\AutoloadValidator\ClassMap;
 use PhpCodeQuality\AutoloadValidation\ClassLoader\EnumeratingClassLoader;
+use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException;
+use PhpCodeQuality\AutoloadValidation\Exception\DeprecatedClassException;
+use PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException;
 use PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException;
 use Psr\Log\LoggerInterface;
 
@@ -168,22 +171,31 @@ class AllLoadingAutoLoader
 
         try {
             $this->loader->loadClass($className);
-            if (!$this->loader->isClassFromFile($className, $file)) {
-                $this->logger->warning(
-                    '{class} was loaded from {realFile} (should be located in file {file}).',
-                    array(
-                        'class' => $className,
-                        'file' => $file,
-                        'realFile' => $this->loader->getFileDeclaringClass($className)
-                    )
-                );
-            }
+            $this->checkDeclaringFile($className, $file);
+
+            return true;
+        } catch (DeprecatedClassException $exception) {
+            $this->logger->warning(
+                '{class} triggered deprecation: {message} (file {file}).',
+                array('class' => $className, 'file' => $file, 'message' => $exception->getDeprecationMessage())
+            );
+            $this->checkDeclaringFile($className, $file);
 
             return true;
         } catch (ClassNotFoundException $exception) {
             $this->logger->error(
                 'The autoloader could not load {class} (should be located in file {file}).',
                 array('class' => $className, 'file' => $file)
+            );
+        } catch (ClassAlreadyRegisteredException $exception) {
+            $this->logger->error(
+                '{class} is already loaded from file {realfile}, can not test loading from file {file}.',
+                array('class' => $className, 'file' => $file)
+            );
+        } catch (InvalidClassNameException $exception) {
+            $this->logger->warning(
+                'Skipped loading of {class}, it is a reserved name since {php-version} (file {file}).',
+                array('class' => $className, 'file' => $file, 'php-version' => $exception->getPhpVersion())
             );
         } catch (\ErrorException $exception) {
             $this->logger->error(
@@ -207,5 +219,28 @@ class AllLoadingAutoLoader
         return (class_exists($className, false)
             || interface_exists($className, false)
             || (function_exists('trait_exists') && trait_exists($className, false)));
+    }
+
+    /**
+     * Check that the file declaring the class matches the one we expect.
+     *
+     * @param string $className The class name.
+     *
+     * @param string $file      The expected file.
+     *
+     * @return void
+     */
+    private function checkDeclaringFile($className, $file)
+    {
+        if (true !== ($realFile = $this->loader->isClassFromFile($className, $file))) {
+            $this->logger->warning(
+                '{class} was loaded from {realFile} (should be located in file {file}).',
+                array(
+                    'class'    => $className,
+                    'file'     => $file,
+                    'realFile' => $realFile
+                )
+            );
+        }
     }
 }

@@ -20,7 +20,10 @@
 
 namespace PhpCodeQuality\AutoloadValidation\ClassLoader;
 
+use PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException;
 use PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException;
+use PhpCodeQuality\AutoloadValidation\Exception\DeprecatedClassException;
+use PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException;
 use PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException;
 
 /**
@@ -54,6 +57,13 @@ class EnumeratingClassLoader
     private $previousLoaders;
 
     /**
+     * The list of loaded classes.
+     *
+     * @var string[]
+     */
+    private $loadList;
+
+    /**
      * Loads the given class/interface/trait.
      *
      * @param string $class The name of the class to load.
@@ -63,19 +73,28 @@ class EnumeratingClassLoader
      * @throws ClassNotFoundException When a class could not be found.
      *
      * @throws ParentClassNotFoundException When a parent class could not be found.
+     *
+     * @throws DeprecatedClassException When a class raised a deprecation error.
      */
     public function loadClass($class)
     {
+        $this->checkClassName($class);
+
         if (empty($this->loading)) {
             $this->loading = $class;
         }
         try {
             foreach ($this->loaders as $name => $loader) {
-                if (call_user_func($loader, $class)) {
-                    if ($class === $this->loading) {
-                        $this->loading = null;
+                try {
+                    if ($loaderName = $this->tryLoad($loader, $class, $name)) {
+                        return $loaderName;
                     }
-                    return $name;
+                } catch (\ErrorException $exception) {
+                    $this->loading = null;
+                    if (E_USER_DEPRECATED === $exception->getSeverity()) {
+                        throw new DeprecatedClassException($class, $exception->getMessage(), 0, $exception);
+                    }
+                    throw $exception;
                 }
             }
         } catch (ParentClassNotFoundException $exception) {
@@ -135,6 +154,10 @@ class EnumeratingClassLoader
      */
     public function getFileDeclaringClass($className)
     {
+        if (!$this->isLoaded($className)) {
+            return '';
+        }
+
         $reflector = new \ReflectionClass($className);
         $realFile  = $reflector->getFileName();
 
@@ -169,7 +192,10 @@ class EnumeratingClassLoader
     public function register($prepend = false)
     {
         // Just to make sure we have them loaded.
+        spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ClassAlreadyRegisteredException');
         spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ClassNotFoundException');
+        spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\DeprecatedClassException');
+        spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\InvalidClassNameException');
         spl_autoload_call('PhpCodeQuality\AutoloadValidation\Exception\ParentClassNotFoundException');
 
         $this->previousLoaders = spl_autoload_functions();
@@ -192,5 +218,99 @@ class EnumeratingClassLoader
         }
 
         spl_autoload_unregister(array($this, 'loadClass'));
+    }
+
+    /**
+     * Try to load the class.
+     *
+     * @param callable $loader     The loader to use.
+     *
+     * @param string   $class      The class name.
+     *
+     * @param string   $loaderName The internal name of the loader.
+     *
+     * @return null|string
+     *
+     * @throws ClassAlreadyRegisteredException When the class has been registered before.
+     */
+    private function tryLoad($loader, $class, $loaderName)
+    {
+        if (isset($this->loadList[$class])) {
+            return $this->loadList[$class];
+        }
+
+        if ($this->isLoaded($class)) {
+            throw new ClassAlreadyRegisteredException($class, $this->getFileDeclaringClass($class));
+        }
+
+        if (call_user_func($loader, $class)) {
+            if ($class === $this->loading) {
+                $this->loading = null;
+            }
+
+            return $this->loadList[$class] = $loaderName;
+        }
+
+        if ($this->isLoaded($class)) {
+            trigger_error('loader ' . $loaderName . ' did not return true');
+            return $this->loadList[$class] = $loaderName;
+        }
+
+        return null;
+    }
+
+    /**
+     * Check the class name.
+     *
+     * @param string $class The class name.
+     *
+     * @return void
+     *
+     * @throws InvalidClassNameException When the class name is invalid.
+     */
+    private function checkClassName($class)
+    {
+        // @codingStandardsIgnoreStart -  The comments look like commented code.
+        static $forbiddenClasses = array(
+            '7.0' => array(
+                // bool
+                'loob',
+                // boolean
+                'naeloob',
+                // int
+                'tni',
+                // integer
+                'regetni',
+                // float
+                'taolf',
+                // string
+                'gnirts',
+                // null
+                'llun',
+                // false
+                'eslaf',
+                // true
+                'eurt',
+                // resource
+                'ecruoser',
+                // object
+                'tcejbo',
+                // mixed
+                'dexim',
+                // numeric
+                'ciremun',
+            )
+        );
+        // @codingStandardsIgnoreEnd
+
+        $match = strrev(strtolower($class));
+
+        foreach ($forbiddenClasses as $since => $forbidden) {
+            foreach ($forbidden as $forbiddenClass) {
+                if (0 === strncmp($forbiddenClass, $match, strlen($forbiddenClass))) {
+                    throw new InvalidClassNameException($class, $since);
+                }
+            }
+        }
     }
 }
